@@ -1,11 +1,13 @@
 package com.guild.calendar.entity;
 
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-
+import java.time.LocalTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -35,29 +37,26 @@ import lombok.ToString;
 		allocationSize = 20
 		)
 */
-public class RaidPlanGuildUser extends BaseEntity{
+public class CalendarDetail extends BaseEntity{
 
-	@Id @GeneratedValue(strategy = GenerationType.AUTO, generator = "raid_plan_guild_user_seq_GENERATOR")
-	@Column(name = "raid_plan_guild_user_id")
+	@Id @GeneratedValue(strategy = GenerationType.AUTO, generator = "calendar_detail_GENERATOR")
+	@Column(name = "calendar_detail_id")
 	private Long id;
 	
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "calendar_id")
 	private Calendar calendar;
 	
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "raid_plan")
 	private RaidPlan raidPlan;
 	
 	
 	
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "guild_user_id")
 	private GuildUser guildUser;
 
-	
-	
-	private LocalDateTime raidStartDateTime;
 	
 	
 }

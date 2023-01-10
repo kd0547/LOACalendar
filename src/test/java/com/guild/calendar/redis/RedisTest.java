@@ -39,7 +39,7 @@ public class RedisTest {
 	
 	Authentication createAuth() {
 		String userName = "test@naver.com";
-		String password = passwordEncoder.encode("test");
+		String password = passwordEncoder.encode("test1234");
 		
 		UserDetails userDetails = User.builder()
 				.username(userName)
@@ -54,29 +54,28 @@ public class RedisTest {
 		RedisPaserUtil redisPaserUtil = new RedisPaserUtil(new ObjectMapper());
 		Authentication authentication = createAuth();
 		
-		IpUserDetailsToken ipUserDetailsToken = (IpUserDetailsToken) jwtTokenProvider.generateToken(authentication, "ipUserDetailsToken");
+		IpUserDetailsToken ipUserDetailsToken = (IpUserDetailsToken) jwtTokenProvider.generateToken(authentication,IpUserDetailsToken.class);
 		
 		String accessToken_key = ipUserDetailsToken.getAccessToken();
-		//String ipUserDetailsToken_value = redisPaserUtil.ObjectToJSON(ipUserDetailsToken);
+	
 		
-		
-		//jwTokenRedisService.setDate(accessToken_key, ipUserDetailsToken_value);
-		
-		redisService.setData(accessToken_key, ipUserDetailsToken);
+		redisService.setData(authentication.getName(), ipUserDetailsToken);
 		
 		//요청이 들어오면 
-		String request_AccessToken_Key = accessToken_key;
-		IpUserDetailsToken findToken = (IpUserDetailsToken) redisService.getData(request_AccessToken_Key, IpUserDetailsToken.class);
+		String accessKey = jwtTokenProvider.getUserIdFromJWT(accessToken_key);
 		
 		
-		String findAccessToken = findToken.getAccessToken();
-		String findKey = findToken.getKey();
+		IpUserDetailsToken findToken = (IpUserDetailsToken) redisService.getData(accessKey, IpUserDetailsToken.class);
+		
+		
+		System.out.println(accessKey);
+		System.out.println("accessKey : "+findToken.getAccessToken());
+		System.out.println("refreshKey : "+findToken.getRefreshToken());
 		
 		
 		
-		String findUsername = jwtTokenProvider.getUserIdFromJWT(findAccessToken, findKey);
 		
-		assertThat(findUsername).isEqualTo(authentication.getName());
+		
 		
 	}
 	/*

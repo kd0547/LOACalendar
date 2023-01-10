@@ -49,13 +49,13 @@ public class MemberService implements UserDetailsService{
 		Member member = memberRepository.findByEmail(loginRequest.getEmail());
 		
 		if(member == null) {
-			throw new UsernameNotFoundException(loginRequest.getEmail());
+			throw new UsernameNotFoundException("-101");
 		}
 		
 		String rawPassword = loginRequest.getSecret();
 		
 		if(!passwordEncoder.matches(rawPassword,member.getPassword())) {
-			throw new IllegalArgumentException("비밀번호를 확인하세요");
+			throw new IllegalArgumentException("-101");
 		}
 
 		
@@ -65,14 +65,21 @@ public class MemberService implements UserDetailsService{
 				.role(member.getRole().toString())
 				.build();
 	}
-
+	/**
+	 * 
+	 * 이메일을 검사한다. 중복된 이메일이 있는 경우 <b>IllegalStateException</b> 이 발생한다.</br>
+	 * 
+	 * @param memberForm
+	 * @exception IllegalStateException
+	 * 
+	 */
 	public void duplicateEmail(MemberForm memberForm) {
 		String email = memberForm.getEmail();
 		
 		Member findMember = memberRepository.findByEmail(email);
 		
 		if(findMember != null) {
-			throw new IllegalStateException("이미 가입된 회원입니다.");
+			throw new IllegalStateException("-100");
 		}	
 	}
 
@@ -93,8 +100,14 @@ public class MemberService implements UserDetailsService{
 
 
 	public MemberForm findMember(String email) {
-		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public Long findByEmail(String username) {
+		Member member = memberRepository.findByEmail(username);
+		
+		
+		return member.getId();
 	}
 
 	

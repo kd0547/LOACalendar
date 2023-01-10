@@ -14,4 +14,15 @@ public class SuccessCode {
 	private Long id;
 	
 	private String message;
+	public SuccessCode() {}
+	
+	public SuccessCode(int stateCode,String message) {
+		this(stateCode,null,message);
+	}
+	
+	public SuccessCode(int stateCode,Long id,String message) {
+		this.stateCode = stateCode;
+		this.id = id;
+		this.message = message;
+	}
 }

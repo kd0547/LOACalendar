@@ -36,16 +36,23 @@ public class RedisServiceImpl implements RedisService{
 	public <T> Object getData(String key,Class<T> classes) {
 		String object = (String) jwTokenRedisService.getData(key, classes);
 		
-		if(object != null) {
-			return paserUtil.JsonToObject(object, classes);
+		if(object == null) {
+			throw new IllegalStateException("-102");
 		}
 		
-		return null;
+		
+		return paserUtil.JsonToObject(object, classes);
 	}
 
 	@Override
 	public boolean deleteData(String key) {
-		return jwTokenRedisService.deleteData(key);
+		boolean isDelete = jwTokenRedisService.deleteData(key);
+		
+		if(!isDelete) {
+			throw new IllegalStateException("-102");
+		}
+		
+		return  isDelete;
 	}
 
 }

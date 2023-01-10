@@ -52,7 +52,7 @@ public class RedisConfig {
 		
 		RedisCacheConfiguration configuration = RedisCacheConfiguration.defaultCacheConfig(loader.getClassLoader())
 				.disableCachingNullValues()
-				.entryTtl(Duration.ofDays(1L));
+				.entryTtl(Duration.ofDays(30L));
 		
 		return builder.cacheDefaults(configuration).build();
 	}

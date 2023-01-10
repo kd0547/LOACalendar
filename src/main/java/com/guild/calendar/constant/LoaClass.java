@@ -3,8 +3,12 @@ package com.guild.calendar.constant;
 public enum LoaClass {
 	//전사
 	DESTROYER,GUNLANCER,BERSERKER,PALADIN,
+	//디스트로이어
+	
 	//무도가
 	WARDANCER,SCRAPPER,SOULFIST,GLAIVIER,STRIKER,
+	//배틀마스터 , 인파이터						, 스트라이커
+	
 	//헌터
 	DEADEYE,ARTILLERIST,SHARPSHOOTER,MACHINIST,GUNSLINGER,
 	//마법사 

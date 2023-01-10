@@ -1,11 +1,8 @@
 package com.guild.calendar.dto;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.List;
 
-import com.guild.calendar.constant.LegionRaid;
 import com.guild.calendar.constant.LoaClass;
+import com.guild.calendar.entity.GuildUser;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -24,4 +21,14 @@ public class GuildUserDto {
 	private String username;
 	
 	private int level;
+	
+	public static GuildUserDto createGuildUserDto(GuildUser guildUser) {
+		GuildUserDto guildUserDto = new GuildUserDto();
+		guildUserDto.setId(guildUser.getId());
+		guildUserDto.setLoaClass(guildUser.getLoaClass());
+		guildUserDto.setUsername(guildUser.getUsername());
+		guildUserDto.setLevel(guildUser.getLevel());
+		
+		return guildUserDto;
+	}
 }

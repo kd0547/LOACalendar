@@ -2,19 +2,22 @@ package com.guild.calendar.config;
 
 import java.util.Arrays;
 
+
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.context.SecurityContextHolder;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -38,6 +41,9 @@ public class SecurityConfig {
 	@Autowired
 	private final RedisService redisService;
 	
+	@Value("${jwt.token.key}")
+	private String key;
+	
 	
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -53,7 +59,7 @@ public class SecurityConfig {
 			.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 		.and()
             .authorizeRequests() 
-            .antMatchers("/","/auth/**").permitAll()
+            .antMatchers("/calendar/share/url/**","/auth/**").permitAll()
             .antMatchers("/**").authenticated()
         .and()
             .exceptionHandling().authenticationEntryPoint(unAuthorizedHandler).and()
@@ -72,7 +78,7 @@ public class SecurityConfig {
 	
 	@Bean
 	public CustomTokenProvider jwTokenProvider() {
-		CustomTokenProvider customTokenProvider = new JwtTokenProvider(passwordEncoder(),redisService);
+		CustomTokenProvider customTokenProvider =  new JwtTokenProvider(passwordEncoder(),redisService,key);
 		
 		return customTokenProvider;
 	}

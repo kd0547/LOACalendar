@@ -4,6 +4,7 @@ package com.guild.calendar.entity;
 import javax.persistence.Column;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -30,18 +31,19 @@ public class Calendar extends BaseEntity {
 	private String subject;
 	
 	
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "member_id")
 	private Member member;
 	
 	
 	private String shareUser;
 	
-	@OneToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="guild_id")
 	private Guild guild;
 	
-	
+	//해당 데이터의 생성자 또는 소유자 ID
+	private String owner;
 	
 	public Calendar() {}
 	public Calendar(Builder builder) {

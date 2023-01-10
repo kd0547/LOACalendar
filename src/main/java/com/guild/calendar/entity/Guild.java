@@ -36,20 +36,22 @@ public class Guild extends BaseEntity{
 	
 	private String guildOwner;
 	
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "member_id")
 	private Member member;
 	
 	@Enumerated(EnumType.STRING)
 	private DiscordAuth discodeAuth; //인증 여부 
 	
+	//해당 데이터의 생성자 또는 소유자 ID
+	private String owner;
 	
-	
-	public static Guild createGuild(String username, String guildName) {
+	public static Guild createGuild(Member member,String username, String guildName) {
 		Guild guild = new Guild();
 		
 		guild.setGuildName(guildName);
 		guild.setGuildOwner(username);
+		guild.setMember(member);
 		guild.setDiscodeAuth(DiscordAuth.NOTAuthentication);
 		
 		return guild;

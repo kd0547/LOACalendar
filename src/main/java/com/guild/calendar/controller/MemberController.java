@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.guild.calendar.dto.ErrorCode;
 import com.guild.calendar.dto.MemberForm;
@@ -25,7 +26,7 @@ import com.guild.calendar.service.MemberService;
 
 import lombok.RequiredArgsConstructor;
 
-@Controller
+@RestController
 @RequestMapping("/member")
 @RequiredArgsConstructor
 public class MemberController {
@@ -35,7 +36,7 @@ public class MemberController {
 	
 	
 	@PostMapping("/signup")
-	public ResponseEntity<SuccessCode> signup(@RequestBody MemberForm memberForm) {
+	public ResponseEntity<?> signup(@RequestBody MemberForm memberForm) {
 		Long saveId = memberService.saveMember(memberForm);
 		
 		SuccessCode successCode = new SuccessCode();
@@ -45,24 +46,29 @@ public class MemberController {
 		successCode.setMessage("회원가입 완료");
 		
 		
-		return ResponseEntity.ok(successCode);
+		return ResponseEntity.status(HttpStatus.OK).body(successCode);
 	}
 	
 	@GetMapping("/view")
-	public void viewMember(Principal principal) {
+	public ResponseEntity<?> viewMember(Principal principal) {
 		String email = principal.getName();
 		
 		MemberForm findMember = memberService.findMember(email);
 		
 		
+		
+		
+		
+		return null;	
 	}
 	
 	
 	
 	
 	@PutMapping("/update")
-	public void updateMember(Principal principal) {
+	public ResponseEntity<?> updateMember(Principal principal) {
 		
+		return null;
 	}
 	
 	
@@ -70,9 +76,12 @@ public class MemberController {
 	
 	
 	@PostMapping("/delete")
-	public void deletMember() {
+	public ResponseEntity<?> deletMember() {
 		
+		return null;
 	}
+	
+	
 	
 	@ExceptionHandler(IllegalStateException.class)
 	public ResponseEntity<ErrorCode> handleIllegalStateException(IllegalStateException exception) {

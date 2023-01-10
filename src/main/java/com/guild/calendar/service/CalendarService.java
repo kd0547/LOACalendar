@@ -17,24 +17,26 @@ import org.springframework.transaction.annotation.Transactional;
 import com.guild.calendar.Exception.NotFoundException;
 import com.guild.calendar.dto.CalendarDto;
 import com.guild.calendar.dto.CalendarShortInfoDto;
+import com.guild.calendar.dto.ClendarUpdateForm;
 import com.guild.calendar.entity.Calendar;
-import com.guild.calendar.entity.RaidPlanGuildUser;
+import com.guild.calendar.entity.Member;
+import com.guild.calendar.entity.RaidPlan;
+import com.guild.calendar.entity.CalendarDetail;
 import com.guild.calendar.repository.CalendarRepository;
-import com.guild.calendar.repository.RaidPlanGuildUserRepository;
+import com.guild.calendar.repository.MemberRepository;
+import com.guild.calendar.repository.CalendarDetailRepository;
+import com.guild.calendar.repository.RaidPlanRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
-
+@RequiredArgsConstructor
 public class CalendarService {
 
 	private final CalendarRepository calendarRepository;
-	private final RaidPlanGuildUserRepository raidPlanGuildUserRepository;
-	
-	@Autowired
-	public CalendarService(RaidPlanGuildUserRepository raidPlanGuildUserRepository, CalendarRepository calendarRepository) {
-		this.raidPlanGuildUserRepository = raidPlanGuildUserRepository;
-		this.calendarRepository = calendarRepository;
-		
-	}
+	private final CalendarDetailRepository raidPlanGuildUserRepository;
+	private final RaidPlanRepository raidPlanRepository;
+	private final MemberRepository memberRepository;
 	
 	
 	
@@ -56,9 +58,9 @@ public class CalendarService {
 		endDate = LocalDateTime.of(month,endTime);
 		
 		
-		List<RaidPlanGuildUser> RaidPlanGuildUsers = raidPlanGuildUserRepository.selectByRaidStartDateWhereGuildName(guildName, startDate, endDate);
+		List<CalendarDetail> RaidPlanGuildUsers = raidPlanGuildUserRepository.selectByRaidStartDateWhereGuildName(guildName, startDate, endDate);
 		
-		for(RaidPlanGuildUser guildPlan :  RaidPlanGuildUsers) {
+		for(CalendarDetail guildPlan :  RaidPlanGuildUsers) {
 			
 		}
 		
@@ -81,37 +83,88 @@ public class CalendarService {
 	 * 
 	 * @param calendarDto
 	 */
-	public void createCalendar(CalendarDto calendarDto) {
+	public Long createCalendar(CalendarDto calendarDto) {
+		Member member = memberRepository.findByEmail(calendarDto.getUsername());
+		
 		
 		Calendar calendar = new Calendar.Builder()
-							//.member(calendarDto.getUsername())
+							.member(member)
 							.subject(calendarDto.getSubject())
 							.build();
 	
-		calendarRepository.save(calendar);
-		
+		Calendar saveCalendar = calendarRepository.save(calendar);
+		return saveCalendar.getId();
 	}
-
 
 	@Transactional
-	public void updateCalendar(CalendarDto calendarDto) {
+	public void updateCalendar(String username, ClendarUpdateForm clendarUpdateForm) {
+		Member member = memberRepository.findByEmail(username);
 		
-		Calendar calendar = calendarRepository.findByMemberIdAndcalendarId(calendarDto.getUsername(),calendarDto.getId());
-		
+		Calendar calendar = calendarRepository.findByMemberAndId(member,clendarUpdateForm.getId());
+	
 		if(calendar == null) {
-			throw new NotFoundException();
+			throw new NullPointerException();
 		}
-		
-		calendar.setSubject(calendarDto.getSubject());
-		
-		
+		calendar.setSubject(clendarUpdateForm.getSubject());
 	}
+	
+	
 	public Calendar findByCalendarId(Long calendarId) {
 		Optional<Calendar> findCalendar = calendarRepository.findById(calendarId);
 		
 		
 		return findCalendar.get();
 	}
+
+
+
+	@Transactional
+	public void deleteCalendar(String username, Long id) {
+		
+		Calendar findCalendar = calendarRepository.findByMemberIdAndcalendarId(username, id);
+		
+		if(findCalendar == null) {
+			throw new NullPointerException();
+		}
+		
+		List<CalendarDetail> raidPlanGuilds = raidPlanGuildUserRepository.findAllByCalendar(id);
+		//List<RaidPlan> raidPlans = raidPlanRepository.findAllByCalendar(id);
+		
+		//raidPlanRepository.deleteAllInBatch(raidPlans);
+		raidPlanGuildUserRepository.deleteAllInBatch(raidPlanGuilds);	
+		
+		calendarRepository.delete(findCalendar);
+		
+		
+	}
+
+	public List<CalendarDto> findByCalendar(String username) {
+		Member member = memberRepository.findByEmail(username);
+		
+		System.out.println(member);
+		
+		List<Calendar> calendars = calendarRepository.findAllByMember(member);
+		
+		System.out.println(calendars);
+		
+		List<CalendarDto> calendarDtos = new ArrayList<CalendarDto>();
+		
+		for(Calendar calendar : calendars) {
+			CalendarDto calendarDto = new CalendarDto();
+			calendarDto.setId(calendar.getId());
+			calendarDto.setSubject(calendar.getSubject());
+			calendarDto.setUsername(username);
+			calendarDto.setCreateDate(calendar.getRegTime().toLocalDate());
+			
+			calendarDtos.add(calendarDto);
+		}
+		
+		
+		return calendarDtos;
+	}
+
+
+	
 	
 	
 	

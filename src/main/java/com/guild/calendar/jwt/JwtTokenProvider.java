@@ -3,6 +3,7 @@ package com.guild.calendar.jwt;
 
 
 import java.nio.charset.StandardCharsets;
+import java.security.Key;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -10,6 +11,7 @@ import java.util.UUID;
 import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -27,6 +29,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
+import lombok.RequiredArgsConstructor;
 
 
 
@@ -46,12 +49,18 @@ public class JwtTokenProvider implements CustomTokenProvider{
 	
 	
 	private static final ChronoUnit AccessTokenValidMinutes = ChronoUnit.MINUTES;
-	private static final ChronoUnit RefreshTokenValidMinutes = ChronoUnit.HOURS;
+	private static final ChronoUnit RefreshTokenValidMinutes = ChronoUnit.DAYS;
 	
 	private static final SignatureAlgorithm defaultSignatureAlgorithm = SignatureAlgorithm.HS256;
 	
+	
+	private String secretKey;
+	
+	@Deprecated
+	private static Key key;
+	
 	private static final Long AccessTokenTime = 30L;
-	private static final Long RefreshTokenTime = 24L;
+	private static final Long RefreshTokenTime = 30L;
 	
 	
 	private final PasswordEncoder passwordEncoder;
@@ -59,12 +68,126 @@ public class JwtTokenProvider implements CustomTokenProvider{
 	
 	private final RedisService redisService;
 	
-	public JwtTokenProvider (PasswordEncoder passwordEncoder,RedisService redisService) {
+	public JwtTokenProvider (PasswordEncoder passwordEncoder,RedisService redisService,String key) {
 		this.passwordEncoder = passwordEncoder;
 		this.redisService = redisService;
+		this.secretKey = key;
 	}
 	
 	
+	@Override
+    public JWToken generateToken(Authentication authentication,Class TokenType) {
+    	
+    	if(authentication == null) {
+    		throw new NullPointerException();
+    	}
+    	String username = authentication.getName();
+    	
+    	Claims claims = Jwts.claims()
+    			.setSubject(username);
+    	claims.put("roles", authentication.getAuthorities());
+    	SecretKey key = createSecret(secretKey);
+    	
+    	Instant now = Instant.now();
+    	
+    	new Date();
+		new Date();
+		String accessToken = Jwts.builder()
+    			.setClaims(claims)
+    			.setIssuedAt(Date.from(now))
+    			.setExpiration(Date.from(now.plus(AccessTokenTime, AccessTokenValidMinutes))) //
+    			.setId(UUID.randomUUID().toString())
+    			.signWith(key, defaultSignatureAlgorithm)
+    			.compact();
+    	
+    	new Date();
+		new Date();
+		String refreshToken = Jwts.builder()
+    			.setClaims(claims)
+    			.setIssuedAt(Date.from(now))
+    			.setExpiration(Date.from(now.plus(RefreshTokenTime, RefreshTokenValidMinutes))) //
+    			.setId(UUID.randomUUID().toString())
+    			.signWith(key, defaultSignatureAlgorithm)
+    			.compact();
+    	    	
+    	return createUseToken(TokenType,accessToken,refreshToken);
+    }
+	
+	@Override
+    public JWToken generateToken(Authentication authentication) {
+    	
+    	if(authentication == null) {
+    		throw new NullPointerException();
+    	}
+    	String username = authentication.getName();
+    	
+    	Claims claims = Jwts.claims()
+    			.setSubject(username);
+    	claims.put("roles", authentication.getAuthorities());
+
+    	SecretKey key = createSecret(secretKey);
+    	
+    	Instant now = Instant.now();
+    	
+    	new Date();
+		new Date();
+		String accessToken = Jwts.builder()
+    			.setClaims(claims)
+    			.setIssuedAt(Date.from(now))
+    			.setExpiration(Date.from(now.plus(AccessTokenTime, AccessTokenValidMinutes))) //
+    			.setId(UUID.randomUUID().toString())
+    			.signWith(key, defaultSignatureAlgorithm)
+    			.compact();
+    	
+    	new Date();
+		new Date();
+		String refreshToken = Jwts.builder()
+    			.setClaims(claims)
+    			.setIssuedAt(Date.from(now))
+    			.setExpiration(Date.from(now.plus(RefreshTokenTime, RefreshTokenValidMinutes))) //
+    			.setId(UUID.randomUUID().toString())
+    			.signWith(key, defaultSignatureAlgorithm)
+    			.compact();
+    	    	
+    	return createUseToken(IpUserDetailsToken.class,accessToken,refreshToken);
+    }
+	
+	@Override
+	public JWToken generateToken(String username) {
+		Claims claims = Jwts.claims()
+    			.setSubject(username);
+    	//claims.put("roles", authentication.getAuthorities());
+
+    	SecretKey key = createSecret(secretKey);
+    	
+    	Instant now = Instant.now();
+    	
+    	new Date();
+		new Date();
+		String accessToken = Jwts.builder()
+    			.setClaims(claims)
+    			.setIssuedAt(Date.from(now))
+    			.setExpiration(Date.from(now.plus(AccessTokenTime, AccessTokenValidMinutes))) //
+    			.setId(UUID.randomUUID().toString())
+    			.signWith(key, defaultSignatureAlgorithm)
+    			.compact();
+    	
+    	new Date();
+		new Date();
+		String refreshToken = Jwts.builder()
+    			.setClaims(claims)
+    			.setIssuedAt(Date.from(now))
+    			.setExpiration(Date.from(now.plus(RefreshTokenTime, RefreshTokenValidMinutes))) //
+    			.setId(UUID.randomUUID().toString())
+    			.signWith(key, defaultSignatureAlgorithm)
+    			.compact();
+    	    	
+    	return createUseToken(IpUserDetailsToken.class,accessToken,refreshToken);
+	}
+	
+	
+	
+	@Deprecated
 	@Override
     public JWToken generateToken(Authentication authentication,String useToken) {
     	
@@ -81,18 +204,20 @@ public class JwtTokenProvider implements CustomTokenProvider{
     	
     	Instant now = Instant.now();
     	
-    	String accessToken = Jwts.builder()
+    	new Date();
+		String accessToken = Jwts.builder()
     			.setClaims(claims)
-    			.setIssuedAt(new Date().from(now))
-    			.setExpiration(new Date().from(now.plus(AccessTokenTime, AccessTokenValidMinutes))) //
+    			.setIssuedAt(Date.from(now))
+    			.setExpiration(Date.from(now.plus(AccessTokenTime, AccessTokenValidMinutes))) //
     			.setId(UUID.randomUUID().toString())
     			.signWith(key, defaultSignatureAlgorithm)
     			.compact();
     	
-    	String refreshToken = Jwts.builder()
+    	
+		String refreshToken = Jwts.builder()
     			.setClaims(claims)
-    			.setIssuedAt(new Date().from(now))
-    			.setExpiration(new Date().from(now.plus(RefreshTokenTime, RefreshTokenValidMinutes))) //
+    			.setIssuedAt(Date.from(now))
+    			.setExpiration(Date.from(now.plus(RefreshTokenTime, RefreshTokenValidMinutes))) //
     			.setId(UUID.randomUUID().toString())
     			.signWith(key, defaultSignatureAlgorithm)
     			.compact();
@@ -100,7 +225,21 @@ public class JwtTokenProvider implements CustomTokenProvider{
     	return createUseToken(useToken,accessToken,refreshToken,secretKey);
     }
 	
+	@Override
+    public String getUserIdFromJWT(String token) {
+		SecretKey key = createSecret(secretKey);
+		
+    	Claims claims = Jwts.parserBuilder()
+    			.setSigningKey(key)
+    			.build()
+    			.parseClaimsJws(token)
+    			.getBody();
+    						
+
+        return claims.getSubject();
+    }
 	
+	@Deprecated
 	@Override
 	public String getUserIdFromJWT(JWToken token) {
 		
@@ -109,6 +248,8 @@ public class JwtTokenProvider implements CustomTokenProvider{
 	}
 
 	
+	
+	@Deprecated
 	@Override
     public String getUserIdFromJWT(String token,String secretKey) {
 		SecretKey key = createSecret(secretKey);
@@ -128,6 +269,18 @@ public class JwtTokenProvider implements CustomTokenProvider{
 		this.validateToken(token.getAccessToken(),token.getKey());
 	}
 	
+	@Override
+	public void validateToken(String token) throws ExpiredJwtException, UnsupportedJwtException, MalformedJwtException,
+			SignatureException, IllegalArgumentException {
+		SecretKey key = createSecret(secretKey);
+		
+		
+		
+		Jwts.parserBuilder()
+		.setSigningKey(key)
+		.build()
+		.parseClaimsJws(token);
+	}
     
     @Override
     public void validateToken(String token,String secretKey) throws ExpiredJwtException, UnsupportedJwtException, MalformedJwtException, SignatureException, IllegalArgumentException{
@@ -139,6 +292,35 @@ public class JwtTokenProvider implements CustomTokenProvider{
 		.parseClaimsJws(token);
     }
     
+    @Override
+    public JWToken createUseToken(Class useToken,String accessKey,String refreshKey) {
+    	
+    	
+    	if(isIpUserDetailsToken(useToken)) {
+    		
+    		return new IpUserDetailsToken(null, accessKey, refreshKey,null);
+    	} else if(isUserDetailsToken(useToken)) {
+    		
+    		return new UserDetailsToken(accessKey, refreshKey, null);
+    	}
+    	
+		return null;
+    }
+    
+    private boolean isUserDetailsToken(Class classType) {
+		
+		String type = classType.getName();
+		
+		return UserDetailsToken.class.getName().equals(type);
+	}
+    
+    private boolean isIpUserDetailsToken(Class classType) {
+		String type = classType.getName();
+		
+		return IpUserDetailsToken.class.getName().equals(type);
+	}
+    
+    @Deprecated
     @Override
     public JWToken createUseToken(String useToken,String accessKey,String refreshKey,String secretKey) {
     	
@@ -168,7 +350,7 @@ public class JwtTokenProvider implements CustomTokenProvider{
 	@Override
 	public JWToken findAccessToken(String accessToken,Class classType) {
 		
-		
+	
 		return (JWToken) redisService.getData(accessToken, classType);
 	}
 
@@ -178,6 +360,17 @@ public class JwtTokenProvider implements CustomTokenProvider{
 		redisService.deleteData(token);
 		
 	}
+
+	@Override
+	public JWToken createUseToken(String useToken, String accessKey, String refreshKey) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	
+
+	
 	
 
 

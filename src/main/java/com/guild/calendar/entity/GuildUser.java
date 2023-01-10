@@ -1,7 +1,6 @@
 package com.guild.calendar.entity;
 
-import java.util.ArrayList;
-import java.util.List;
+
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -13,12 +12,9 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerator;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.guild.calendar.constant.LoaClass;
+import com.guild.calendar.dto.GuildUserDto;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -29,7 +25,6 @@ import lombok.ToString;
 @Getter
 @ToString
 @Entity
-
 public class GuildUser extends BaseEntity {
 	
 	@Id @GeneratedValue(strategy = GenerationType.AUTO, generator = "GuildUser_SEQ_GENERATOR")
@@ -40,6 +35,7 @@ public class GuildUser extends BaseEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	private Guild guild;
 	
+	private String memberEmail;
 	
 	private String GuildName;
 	
@@ -52,5 +48,19 @@ public class GuildUser extends BaseEntity {
 	@Column(unique = true)
 	private String username;
 
-	
+	public static GuildUser createGuildUser(GuildUserDto guildUserDto) {
+		GuildUser guildUser = new GuildUser();
+		
+		guildUser.setLevel(guildUserDto.getLevel());
+		guildUser.setUsername(guildUserDto.getUsername());
+		guildUser.setLoaClass(guildUserDto.getLoaClass());
+		
+		
+		return guildUser;
+	}
+	public void updateGuildUser(GuildUserDto guildUserDto) {
+		this.level = guildUserDto.getLevel();
+		this.username = guildUserDto.getUsername();
+		this.loaClass = guildUserDto.getLoaClass();
+	}
 }

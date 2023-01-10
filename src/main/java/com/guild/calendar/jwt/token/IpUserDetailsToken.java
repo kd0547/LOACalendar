@@ -9,6 +9,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import com.guild.calendar.dto.UserDetail;
 
+import lombok.ToString;
+
+
 public class IpUserDetailsToken extends UserDetailsToken{
 	
 	

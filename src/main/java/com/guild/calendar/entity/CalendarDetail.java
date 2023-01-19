@@ -51,6 +51,8 @@ public class CalendarDetail extends BaseEntity{
 	@JoinColumn(name = "raid_plan")
 	private RaidPlan raidPlan;
 	
+	private LocalDate startDate;
+	
 	
 	
 	@ManyToOne(fetch = FetchType.LAZY)

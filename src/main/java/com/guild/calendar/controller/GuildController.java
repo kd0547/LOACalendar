@@ -21,9 +21,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.guild.calendar.Exception.ExceptionCode;
 import com.guild.calendar.dto.ErrorCode;
 import com.guild.calendar.dto.GuildForm;
 import com.guild.calendar.dto.GuildUserDto;
+import com.guild.calendar.dto.ResponseGuildUserDto;
 import com.guild.calendar.dto.SuccessCode;
 import com.guild.calendar.service.GuildService;
 
@@ -35,21 +37,32 @@ import lombok.RequiredArgsConstructor;
 public class GuildController {
 	
 	private final GuildService guildService;
-	//
-	@GetMapping("/view")
+	
+	
+	/**
+	 *	
+	 * @param principal
+	 * @return
+	 */
+	@GetMapping
 	public ResponseEntity<?> viewGuild(Principal principal) {
 		String username = principal.getName();
 		
 		List<GuildForm> findGuild = guildService.findAllGuild(username);
 		
-		System.out.println("test");
+	
 		
 		return ResponseEntity.status(HttpStatus.OK).body(findGuild);
 	}
 	
 	
 	
-	
+	/**
+	 * 길드를 생성합니다. 
+	 * @param principal
+	 * @param guildForm
+	 * @return
+	 */
 	@PostMapping
 	public ResponseEntity<?> createGuild(Principal principal,@RequestBody GuildForm guildForm) {
 		String username = principal.getName();
@@ -57,21 +70,34 @@ public class GuildController {
 		
 		Long saveId= guildService.saveGuild(guildForm);
 		
-		return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessCode(HttpStatus.CREATED.value(), saveId, "길드 생성 성공"));
+		return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessCode(HttpStatus.CREATED.value(), saveId));
 	}
 	
-	
+	/**
+	 * 
+	 * 길드를 수정합니다. 
+	 * 
+	 * @param principal
+	 * @param guildId
+	 * @param guildForm
+	 * @return
+	 */
 	@PutMapping("/{guildId}")
-	public  ResponseEntity<?> updateGuild(Principal principal,@RequestBody GuildForm guildForm) {
+	public  ResponseEntity<?> updateGuild(Principal principal,@PathVariable Long guildId,@RequestBody GuildForm guildForm) {
 		String username = principal.getName();
 		
-		guildService.updateGuild(username,guildForm);
+		guildService.updateGuild(username,guildId,guildForm);
 		
 		
-		return ResponseEntity.status(HttpStatus.NO_CONTENT).body("");
+		return ResponseEntity.status(HttpStatus.ACCEPTED).body(new SuccessCode(HttpStatus.ACCEPTED.value(),guildId));
 	}
 	
-	
+	/**
+	 * 길드를 삭제합니다. 길드 유저가 존재할 경우 삭제할 수 없습니다. 
+	 * @param principal
+	 * @param guildId
+	 * @return
+	 */
 	@DeleteMapping("/{guildId}")
 	public  ResponseEntity<?> deleteGuild(Principal principal,@PathVariable Long guildId) {
 		String username = principal.getName();
@@ -95,10 +121,10 @@ public class GuildController {
 	public ResponseEntity<?> viewGuildUser (Principal principal,@PathVariable Long guildId) {
 		String username = principal.getName();
 			
-		List<GuildUserDto> guildUserDtos = guildService.findAllGuildUser(username,guildId);
+		ResponseGuildUserDto responseGuildUserDto = guildService.findAllGuildUser(username,guildId);
 			
 			
-		return ResponseEntity.status(HttpStatus.OK).body(guildUserDtos);
+		return ResponseEntity.status(HttpStatus.OK).body(responseGuildUserDto);
 	}
 	
 	
@@ -112,36 +138,58 @@ public class GuildController {
 	@PostMapping("/{guildId}/guild-user")
 	public ResponseEntity<?> createGuildUser(Principal principal,@PathVariable Long guildId,@RequestBody GuildUserDto guildUserDto) {
 		String username = principal.getName();
+		
+		
+		
+		
 		Long saveId = guildService.saveGuildUser(username,guildId,guildUserDto);
 		
 		
-		return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessCode(HttpStatus.CREATED.value(), saveId, "유저 생성 완료"));
+		return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessCode(HttpStatus.CREATED.value(), saveId));
 	}
 	
 	
-	
+	/**
+	 * 길드 유저의 정보를 변경합니다. 
+	 * 
+	 * @param principal
+	 * @param guildId
+	 * @param guildUserId
+	 * @param guildUserDto
+	 * @return
+	 */
 	// /guild/{1}/guild-user/{10}
 	@PutMapping("/{guildId}/guild-user/{guildUserId}")
 	public ResponseEntity<?> updateGuildUser(Principal principal,@PathVariable Long guildId,@PathVariable Long guildUserId,@RequestBody GuildUserDto guildUserDto) {
 		String username = principal.getName();
-		
+		/*
+		 * @RequestBody에서 데이터를 바인딩할 때 Enum 타입인 LoaClass의 처리 방법을 생각해보기 
+		 *	 
+		 * 
+		 */
 		System.out.println(guildUserDto.toString());
 		
 		Long updateId = guildService.updateGuildUser(username,guildId,guildUserId,guildUserDto);
 		
-		return ResponseEntity.status(HttpStatus.ACCEPTED).body(new SuccessCode(HttpStatus.ACCEPTED.value(),updateId,"변경 완료"));
+		return ResponseEntity.status(HttpStatus.ACCEPTED).body(new SuccessCode(HttpStatus.ACCEPTED.value(),updateId));
 	}
 	
 	
 	
-	
+	/**
+	 * 길드 유저를 삭제합니다. 
+	 * @param principal
+	 * @param guildId
+	 * @param guildUserId
+	 * @return
+	 */
 	@DeleteMapping("/{guildId}/guild-user/{guildUserId}")
 	public ResponseEntity<?> deleteGuildUser(Principal principal,@PathVariable Long guildId,@PathVariable Long guildUserId) {
 		String username = principal.getName();
 		
-		guildService.deleteGuildUser(username,guildId,guildUserId);
+		Long deleteGuildUser = guildService.deleteGuildUser(username,guildId,guildUserId);
 		
-		return ResponseEntity.status(HttpStatus.ACCEPTED).body(new SuccessCode(HttpStatus.ACCEPTED.value(),null,"삭제 완료"));
+		return ResponseEntity.status(HttpStatus.ACCEPTED).body(new SuccessCode(HttpStatus.ACCEPTED.value(),deleteGuildUser));
 	}
 	
 	
@@ -159,17 +207,58 @@ public class GuildController {
 	
 	@ExceptionHandler(NullPointerException.class)
 	public ResponseEntity<ErrorCode> handleNullponterException(NullPointerException exception) {
-		ErrorCode errorCode = new  ErrorCode(HttpStatus.BAD_REQUEST,exception.getMessage());
+		String errorMessage = exception.getMessage();
 		
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorCode);
+		
+		
+		return null;
+	}
+	
+	@ExceptionHandler(IllegalStateException.class)
+	public ResponseEntity<ErrorCode> handleIllegalStateException(IllegalStateException exception) {
+		String errorMessage = exception.getMessage();
+		
+		if(errorMessage.equals("-150")) {
+			String code = ExceptionCode.NO_SUCH_GUILD.getCode();
+			String message = ExceptionCode.NO_SUCH_GUILD.getMessage();
+		
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorCode(HttpStatus.BAD_REQUEST, code, message));
+		}
+		
+		if(errorMessage.equals("-151")) {
+			String code = ExceptionCode.DUPLICATE_GUILDUUSER.getCode();
+			String message = ExceptionCode.DUPLICATE_GUILDUUSER.getMessage();
+		
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorCode(HttpStatus.BAD_REQUEST, code, message));
+		}
+		
+		
+		if(errorMessage.equals("-152")) {
+			String code = ExceptionCode.USED_GUILD.getCode();
+			String message = ExceptionCode.USED_GUILD.getMessage();
+		
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorCode(HttpStatus.BAD_REQUEST, code, message));
+		}
+		
+		
+		return null;
 	}
 	
 	@ExceptionHandler(IllegalArgumentException.class)
 	public ResponseEntity<ErrorCode> handleIllegalArgumentException(IllegalArgumentException exception) {
-		ErrorCode errorCode = new  ErrorCode(HttpStatus.BAD_REQUEST,exception.getMessage());
+		String errorMessage = exception.getMessage();
 		
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorCode);
+		if(errorMessage.equals("-150")) {
+			String code = ExceptionCode.NO_SUCH_GUILD.getCode();
+			String message = ExceptionCode.NO_SUCH_GUILD.getMessage();
+		
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorCode(HttpStatus.BAD_REQUEST, code, message));
+		}
+		
+		
+		return null;
 	}
+	
 	
 	
 }

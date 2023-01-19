@@ -1,6 +1,8 @@
 package com.guild.calendar.dto;
 
 
+import org.springframework.lang.Nullable;
+
 import com.guild.calendar.constant.LoaClass;
 import com.guild.calendar.entity.GuildUser;
 
@@ -16,6 +18,7 @@ public class GuildUserDto {
 	
 	private Long id;
 	
+	@Nullable
 	private LoaClass loaClass;
 
 	private String username;

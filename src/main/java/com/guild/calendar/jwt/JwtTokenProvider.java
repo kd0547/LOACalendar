@@ -48,7 +48,7 @@ import lombok.RequiredArgsConstructor;
 public class JwtTokenProvider implements CustomTokenProvider{
 	
 	
-	private static final ChronoUnit AccessTokenValidMinutes = ChronoUnit.MINUTES;
+	private static final ChronoUnit AccessTokenValidMinutes = ChronoUnit.DAYS;
 	private static final ChronoUnit RefreshTokenValidMinutes = ChronoUnit.DAYS;
 	
 	private static final SignatureAlgorithm defaultSignatureAlgorithm = SignatureAlgorithm.HS256;
@@ -185,7 +185,24 @@ public class JwtTokenProvider implements CustomTokenProvider{
     	return createUseToken(IpUserDetailsToken.class,accessToken,refreshToken);
 	}
 	
-	
+	public Claims isTokenExpired(String token) {
+		Claims claims = null;
+        try {
+        	SecretKey key = createSecret(secretKey);
+    		
+    		
+    		
+    		Jwts.parserBuilder()
+    		.setSigningKey(key)
+    		.build()
+    		.parseClaimsJws(token);
+        } catch (Exception e) {
+            
+            claims = null;
+        }
+		return claims;
+       
+	}
 	
 	@Deprecated
 	@Override
@@ -291,6 +308,9 @@ public class JwtTokenProvider implements CustomTokenProvider{
 		.build()
 		.parseClaimsJws(token);
     }
+    
+    
+    
     
     @Override
     public JWToken createUseToken(Class useToken,String accessKey,String refreshKey) {

@@ -34,7 +34,7 @@ import lombok.RequiredArgsConstructor;
 public class CalendarService {
 
 	private final CalendarRepository calendarRepository;
-	private final CalendarDetailRepository raidPlanGuildUserRepository;
+	private final CalendarDetailRepository calendarDetailRepository;
 	private final RaidPlanRepository raidPlanRepository;
 	private final MemberRepository memberRepository;
 	
@@ -58,7 +58,7 @@ public class CalendarService {
 		endDate = LocalDateTime.of(month,endTime);
 		
 		
-		List<CalendarDetail> RaidPlanGuildUsers = raidPlanGuildUserRepository.selectByRaidStartDateWhereGuildName(guildName, startDate, endDate);
+		List<CalendarDetail> RaidPlanGuildUsers = calendarDetailRepository.selectByRaidStartDateWhereGuildName(guildName, startDate, endDate);
 		
 		for(CalendarDetail guildPlan :  RaidPlanGuildUsers) {
 			
@@ -97,14 +97,16 @@ public class CalendarService {
 	}
 
 	@Transactional
-	public void updateCalendar(String username, ClendarUpdateForm clendarUpdateForm) {
-		Member member = memberRepository.findByEmail(username);
+	public void updateCalendar(String username,Long calendarId ,ClendarUpdateForm clendarUpdateForm) {
+		//Member member = memberRepository.findByEmail(username);
 		
-		Calendar calendar = calendarRepository.findByMemberAndId(member,clendarUpdateForm.getId());
-	
+		Calendar calendar = calendarRepository.findByIdAndOwner(calendarId,username);
+		
 		if(calendar == null) {
-			throw new NullPointerException();
+			throw new NullPointerException("-190");
 		}
+		
+		
 		calendar.setSubject(clendarUpdateForm.getSubject());
 	}
 	
@@ -117,43 +119,45 @@ public class CalendarService {
 	}
 
 
-
+	/**
+	 * 캘린더와 계획을 모두 삭제합니다. 
+	 * @param username
+	 * @param Calendarid
+	 */
 	@Transactional
-	public void deleteCalendar(String username, Long id) {
+	public void deleteCalendar(String username, Long Calendarid) {
 		
-		Calendar findCalendar = calendarRepository.findByMemberIdAndcalendarId(username, id);
+		Calendar calendar = calendarRepository.findByIdAndOwner(Calendarid,username);
 		
-		if(findCalendar == null) {
-			throw new NullPointerException();
+		if(calendar == null) {
+			throw new NullPointerException("-190");
 		}
 		
-		List<CalendarDetail> raidPlanGuilds = raidPlanGuildUserRepository.findAllByCalendar(id);
-		//List<RaidPlan> raidPlans = raidPlanRepository.findAllByCalendar(id);
+		List<CalendarDetail> calendarDetails = calendarDetailRepository.findAllByCalendar(Calendarid);
+		List<RaidPlan> raidPlans = raidPlanRepository.findAllByCalendar(Calendarid);
 		
-		//raidPlanRepository.deleteAllInBatch(raidPlans);
-		raidPlanGuildUserRepository.deleteAllInBatch(raidPlanGuilds);	
+		raidPlanRepository.deleteAllInBatch(raidPlans);
+		calendarDetailRepository.deleteAllInBatch(calendarDetails);	
 		
-		calendarRepository.delete(findCalendar);
-		
-		
+		calendarRepository.delete(calendar);
 	}
-
+	/**
+	 * 캘린더 조회 메서드 
+	 * @param username
+	 * @return
+	 */
 	public List<CalendarDto> findByCalendar(String username) {
-		Member member = memberRepository.findByEmail(username);
+		//Member member = memberRepository.findByEmail(username);
 		
-		System.out.println(member);
-		
-		List<Calendar> calendars = calendarRepository.findAllByMember(member);
-		
-		System.out.println(calendars);
-		
+		//List<Calendar> calendars = calendarRepository.findAllByMember(member);
+		List<Calendar> calendars = calendarRepository.findByOwner(username);
 		List<CalendarDto> calendarDtos = new ArrayList<CalendarDto>();
 		
 		for(Calendar calendar : calendars) {
 			CalendarDto calendarDto = new CalendarDto();
 			calendarDto.setId(calendar.getId());
 			calendarDto.setSubject(calendar.getSubject());
-			calendarDto.setUsername(username);
+			//calendarDto.setUsername(username);
 			calendarDto.setCreateDate(calendar.getRegTime().toLocalDate());
 			
 			calendarDtos.add(calendarDto);

@@ -17,7 +17,11 @@ public interface CalendarRepository extends JpaRepository<Calendar,Long>{
 	@Query(value = "select * from calendar c where c.member_id = ?1 and c.calendar_id = ?2",nativeQuery = true)
 	public Calendar findByMemberIdAndcalendarId(String memberId, Long calendarId);
 	
+	public List<Calendar> findByOwner(String username);
+	
 	public Calendar findByMemberAndId(Member memberId, Long calendarId);
+	
+	public Calendar findByIdAndOwner(Long calendarId,String username);
 	
 	public List<Calendar> findAllByMember(Member memberId);
 	

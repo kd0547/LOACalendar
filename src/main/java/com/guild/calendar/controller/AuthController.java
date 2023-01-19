@@ -1,5 +1,10 @@
 package com.guild.calendar.controller;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.security.KeyPair;
+import java.util.Base64;
+
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 
@@ -19,10 +24,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.guild.calendar.Exception.ExceptionCode;
 import com.guild.calendar.dto.ErrorCode;
+import com.guild.calendar.dto.IsPublicKey;
+import com.guild.calendar.dto.LoginEncryption;
 import com.guild.calendar.dto.LoginRequest;
 import com.guild.calendar.dto.LoginResponse;
 import com.guild.calendar.dto.MemberForm;
@@ -34,6 +42,7 @@ import com.guild.calendar.jwt.CustomTokenProvider;
 import com.guild.calendar.jwt.JwtTokenProvider;
 import com.guild.calendar.jwt.token.IpUserDetailsToken;
 import com.guild.calendar.redis.RedisService;
+import com.guild.calendar.security.RSAEncryption;
 import com.guild.calendar.service.MemberService;
 
 import io.jsonwebtoken.ExpiredJwtException;
@@ -56,12 +65,39 @@ public class AuthController {
 	@Autowired
 	private RedisService redisService;
 	
-	@GetMapping("/before") 
-	public ResponseEntity<?> loginBefore(HttpServletRequest request){
+	@Autowired
+	private KeyPair keyPair;
+	
+	@Autowired
+	private RSAEncryption rsaEncryption;
+	
+	@GetMapping("/isPublicKey")
+	public ResponseEntity<?> publicKey(@RequestBody IsPublicKey publicKey){
+		
+		String IsPublicKey = publicKey.getPublicKey();
+		byte[] publicKeyByte  = keyPair.getPublic().getEncoded();
+		String stringPublicKey = Base64.getEncoder().encodeToString(publicKeyByte);
 		
 		
+		if(stringPublicKey.equals(IsPublicKey)) {
+			//return ResponseEntity.status(HttpStatus.OK).body(new SuccessCode(HttpStatus.OK.value(), 0L, "사용할 수 있는 publicKey 입니다."));
+			return ResponseEntity.status(HttpStatus.OK).body("");
+		}
+	
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).body("");
+	}
+	
+	@GetMapping("/encrypt") 
+	public ResponseEntity<?> loginencrypt(){
 		
-		return null;
+		LoginEncryption loginEncryption = new LoginEncryption();  
+		
+		loginEncryption.setAlgorithm(keyPair.getPublic().getAlgorithm());
+		loginEncryption.setFormat(keyPair.getPublic().getFormat());
+		loginEncryption.setEncoded(keyPair.getPublic().getEncoded());
+		
+		
+		return ResponseEntity.status(HttpStatus.OK).body(loginEncryption);
 	}
 	
 	@PostMapping("/signup")
@@ -80,15 +116,99 @@ public class AuthController {
 	}
 	
 	
-	public boolean haveUsernameRedis(String username) {
-		boolean haveData= redisService.deleteData(username);
-		if(!haveData) {
-			throw new IllegalStateException("-102");
+	
+	/**
+	 * 
+	 * 로그인 API 입니다. RequestBody에서 데이터를 받아 패스워드를 디코딩 후, 인증이 이루어집니다. 인증이 완료되면 엑세스 토큰과 리프레시 토큰을 발급합니다
+	 * 유저 또는 패스워드가 일치하지 않을 경우, <b>UsernameNotFoundException</b>,<b>IllegalArgumentException</b>이 발생합니다. 에러코드는 -101 입니다.
+	 * 또한 로그인한 유저가 API를 요청할 경우 IllegalStateException이 발생합니다. 에러코드는 -105 입니다.
+	 * @param loginRequest
+	 * @return ResponseEntity
+	 */
+	@PostMapping("/login")
+	public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+		
+		
+		
+		String plainPassword = decryptPassword(loginRequest.getSecret());
+		
+		loginRequest.setSecret(plainPassword);
+		
+		
+		
+		UserDetail findMember = memberService.findByEmail(loginRequest);
+		UserDetails userDetails = findMember.convertUserDetails();
+		
+		Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
+		
+		
+		//로그인 검사
+		if( isNotHaveUsernameRedis(loginRequest.getEmail())) {
+			String username = findMember.getUsername();
+			IpUserDetailsToken ipUserDetailToken = (IpUserDetailsToken) customTokenProvider.findAccessToken(username,IpUserDetailsToken.class);
+			
+			LoginResponse token = new LoginResponse(ipUserDetailToken.getAccessToken(),ipUserDetailToken.getRefreshToken());
+			token.setDocURL("https://app.gitbook.com/o/2Kxp9w9wD6czxO5f7Vpa/s/4c6Lnb6whYxpAx2A81Na/reference/v1.0/authentication");
+			token.setTokenType("Bearer");
+			
+			return ResponseEntity.status(HttpStatus.OK).body(token);
+		} else {
+			//엑세스 토큰 생성
+			IpUserDetailsToken ipUserDetailToken = (IpUserDetailsToken) customTokenProvider.generateToken(authentication, IpUserDetailsToken.class);
+			ipUserDetailToken.setUserDetail(findMember);
+			
+			//토큰 Redis 저장
+			redisService.setData(authentication.getName(), ipUserDetailToken);
+			
+			//redis 오류 대비 Email, AccessKey,RefreshKey,secretKey 로 DB 저장 구현하기
+			
+			
+			LoginResponse token = new LoginResponse(ipUserDetailToken.getAccessToken(),ipUserDetailToken.getRefreshToken());
+			token.setDocURL("https://app.gitbook.com/o/2Kxp9w9wD6czxO5f7Vpa/s/4c6Lnb6whYxpAx2A81Na/reference/v1.0/authentication");
+			token.setTokenType("Bearer");
+			return ResponseEntity.status(HttpStatus.OK).body(token);
 		}
 		
-		return haveData;
+		
+		
+		
 	}
 	
+	/**
+	 * 
+	 * @param encryptPassword
+	 * @return
+	 */
+	private String decryptPassword(String encryptPassword) {
+		String plainPassword = rsaEncryption.decrypt(encryptPassword, keyPair.getPrivate());
+		
+		if(plainPassword == "-106") {
+			throw new IllegalArgumentException("-106");
+		}
+		
+		return plainPassword;
+	}
+	
+	
+	/**
+	 * 로그인한 유저인지 확인합니다.
+	 * 
+	 * @param username
+	 */
+	public boolean isNotHaveUsernameRedis(String username) {
+		String redisUsername = redisService.findData(username);
+		
+		if(redisUsername != null) {
+			return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * 
+	 * @param request
+	 * @return
+	 */
 	@PostMapping("/logout")
 	public ResponseEntity<?> logout(HttpServletRequest request) {
 		
@@ -99,9 +219,11 @@ public class AuthController {
 			
 			String username = customTokenProvider.getUserIdFromJWT(accessToken);
 			
+			//Redis에 유저 정보가 없으면 -102 에러가 발생합니다.
 			haveUsernameRedis(username);
+			//redisService.deleteData(username);
 			
-			
+			return ResponseEntity.status(HttpStatus.OK).body("-1");
 		} catch(ExpiredJwtException eje) {
 			String username = eje.getClaims().getSubject();
 			
@@ -113,14 +235,20 @@ public class AuthController {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorCode(HttpStatus.UNAUTHORIZED, code, message));
 		} catch (UnsupportedJwtException se) {
 			se.printStackTrace();
-				
+			
+			String code = ExceptionCode.UNSUPPORTED_TOKEN.getCode();
+			String message = ExceptionCode.UNSUPPORTED_TOKEN.getMessage();
+			
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorCode(HttpStatus.UNAUTHORIZED, code, message));	
 		} catch (SignatureException | MalformedJwtException mje) {
-			mje.printStackTrace();		
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+			mje.printStackTrace();
+			
+			String code = ExceptionCode.WRONG_TYPE_TOKEN.getCode();
+			String message = ExceptionCode.WRONG_TYPE_TOKEN.getMessage();
+			
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorCode(HttpStatus.UNAUTHORIZED, code, message));
+		} 
 		
-		return null;
 	}
 	
 	@PostMapping("/refresh") 
@@ -128,31 +256,44 @@ public class AuthController {
 		
 		
 		try {
-			//String accessToken = getJwtFromRequest(request);
-		
+			String requestAccessToken = getJwtFromRequest(request);
 			String refreshToken = getRefreshJwtFromRequest(request);
+			
+			//토큰 유효성 검사
 			customTokenProvider.validateToken(refreshToken);
 			String username = customTokenProvider.getUserIdFromJWT(refreshToken);
 
-			//redis에서 유저 데이터를 조회한다.
-			IpUserDetailsToken findIpUserDetailsToken = (IpUserDetailsToken) customTokenProvider.findAccessToken(username,IpUserDetailsToken.class);
+			//redis에서 유저 데이터를 조회한다. Redis에 username이 없으면 로그아웃으로 처리된다.
+			IpUserDetailsToken requestIpUserDetailsToken = (IpUserDetailsToken) customTokenProvider.findAccessToken(username,IpUserDetailsToken.class);
 			
-			UserDetails userDetails = findIpUserDetailsToken.getUserDetail().convertUserDetails();
+			//요청받은 AccessToken과 redis에 저장된 AccessToken을 비교합니다.
+			String saveRedisAccessToken = requestIpUserDetailsToken.getAccessToken();
+			isEqualsAccessToken(requestAccessToken,saveRedisAccessToken);
 			
+			
+			//AccessToken 값이 일치하면 IpUserDetailsToken에서 유저 데이터로 Authentication을 만듭니다.
+			UserDetails userDetails = requestIpUserDetailsToken.getUserDetail().convertUserDetails();
 			Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
-			IpUserDetailsToken ipUserDetailToken = (IpUserDetailsToken) customTokenProvider.generateToken(authentication, IpUserDetailsToken.class);
-			ipUserDetailToken.setUserDetail(findIpUserDetailsToken.getUserDetail());
 			
-			System.out.println(ipUserDetailToken.getAccessToken());
-			System.out.println(ipUserDetailToken.getRefreshToken());
-			System.out.println(ipUserDetailToken.getUserDetail());
+			
+			//AccessToken과 RefreshToken을 생성합니다. 
+			IpUserDetailsToken saveipUserDetailToken = (IpUserDetailsToken) customTokenProvider.generateToken(authentication, IpUserDetailsToken.class);
+			saveipUserDetailToken.setUserDetail(requestIpUserDetailsToken.getUserDetail());
+			
+			//IP 접근도 사용할 경우 추가하기 
+			//saveipUserDetailToken.setIpAdressList(requestIpUserDetailsToken.getIpAdressList());
+			
+			//Redis에서 기존 Token을 삭제하고 새로 생성한 Token을 저장한다.
 			redisService.deleteData(username);
-			redisService.setData(authentication.getName(), ipUserDetailToken);
-			LoginResponse token = new LoginResponse(ipUserDetailToken.getAccessToken(),ipUserDetailToken.getRefreshToken());
+			redisService.setData(authentication.getName(), saveipUserDetailToken);
+			
+			
+			LoginResponse token = new LoginResponse(saveipUserDetailToken.getAccessToken(),saveipUserDetailToken.getRefreshToken());
 			
 			return ResponseEntity.status(HttpStatus.OK).body(token);
 		} catch(ExpiredJwtException eje) {
-			//리프레쉬 토큰 유효기간 만료
+			//리프레시 토큰 유효기간 만료
+			//리프레시 토큰이 만료되면 Redis에서 데이터를 삭제하고 로그아웃 처리한다.
 			String username = eje.getClaims().getSubject();
 			
 			redisService.deleteData(username);
@@ -163,41 +304,47 @@ public class AuthController {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorCode(HttpStatus.UNAUTHORIZED, code, message));
 		} catch (UnsupportedJwtException se) {
 			se.printStackTrace();
-				
+			String code = ExceptionCode.UNSUPPORTED_TOKEN.getCode();
+			String message = ExceptionCode.UNSUPPORTED_TOKEN.getMessage();
+			
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorCode(HttpStatus.UNAUTHORIZED, code, message));	
 		} catch (SignatureException | MalformedJwtException mje) {
+			
 			mje.printStackTrace();		
-		} catch (Exception e) {
-			e.printStackTrace();
+			
+			String code = ExceptionCode.WRONG_TYPE_TOKEN.getCode();
+			String message = ExceptionCode.WRONG_TYPE_TOKEN.getMessage();
+			
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorCode(HttpStatus.UNAUTHORIZED, code, message));
+		} 
+	}
+	
+	
+	
+	
+	/**
+	 * 요청받은 AccessToken과 Redis에 저장된 AccessToken 값을 비교합니다. 일치하지 않으면 <b>IllegalArgumentException</b>을 발생시킵니다.
+	 * 
+	 * @param requestAccessToken
+	 * @param saveRedisAccessToken
+	 */
+	private void isEqualsAccessToken(String requestAccessToken, String saveRedisAccessToken) {
+		
+		if(!requestAccessToken.equals(saveRedisAccessToken)) {
+			throw new IllegalArgumentException("-104");
 		}
 		
+	}
+
+	public boolean haveUsernameRedis(String username) {
+		boolean haveData= redisService.deleteData(username);
+		if(!haveData) {
+			throw new IllegalStateException("-102");
+		}
 		
-		
-		return null;
+		return haveData;
 	}
 	
-	
-	
-	@PostMapping("/login")
-	public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-		
-		UserDetail findMember = memberService.findByEmail(loginRequest);
-		
-		UserDetails userDetails = findMember.convertUserDetails();
-		
-		Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
-		
-		IpUserDetailsToken ipUserDetailToken = (IpUserDetailsToken) customTokenProvider.generateToken(authentication, IpUserDetailsToken.class);
-		ipUserDetailToken.setUserDetail(findMember);
-		
-		redisService.setData(authentication.getName(), ipUserDetailToken);
-		
-		//redis 오류 대비 Email, AccessKey,RefreshKey,secretKey 로 DB 저장 구현하기
-		
-		
-		LoginResponse token = new LoginResponse(ipUserDetailToken.getAccessToken(),ipUserDetailToken.getRefreshToken());
-		
-		return ResponseEntity.status(HttpStatus.OK).body(token);
-	}
 	
 	/*
 	 * 
@@ -220,7 +367,7 @@ public class AuthController {
 		}
 		return null;	
 	}
-	
+	/*
 	@Deprecated
 	@ExceptionHandler(ExpiredJwtException.class)
 	public ResponseEntity<ErrorCode> handleExpiredJwtException(ExpiredJwtException exception) {
@@ -233,7 +380,7 @@ public class AuthController {
 		
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorCode(HttpStatus.UNAUTHORIZED, code, message));
 	}
-	
+	*/
 	
 	@ExceptionHandler(IllegalStateException.class)
 	public ResponseEntity<ErrorCode> handleIllegalStateException(IllegalStateException exception) {
@@ -249,10 +396,13 @@ public class AuthController {
 		} 
 		
 		if(errorMessage.equals("-102")) {
+			ErrorCode errorCode = new  ErrorCode(HttpStatus.UNAUTHORIZED);
 			//로그아웃 처리된 토큰 
 			String code = ExceptionCode.LOGOUT_TOKEN.getCode();
 			String message = ExceptionCode.LOGOUT_TOKEN.getMessage();
-			ErrorCode errorCode =new ErrorCode(HttpStatus.UNAUTHORIZED, code, message);
+			
+			errorCode.setErrorCodeDetail(code);
+			errorCode.setMessage(message);
 			
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorCode);
 		}
@@ -287,6 +437,31 @@ public class AuthController {
 			
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorCode);
 		}
+		
+		
+		
+		if(errorMessage.equals("-104")) {
+			String code = ExceptionCode.ILLEGAL_ACCESS_TOKEN.getCode();
+			String message = ExceptionCode.ILLEGAL_ACCESS_TOKEN.getMessage();
+			
+			errorCode.setErrorCodeDetail(code);
+			errorCode.setMessage(message);
+			
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorCode);
+		}
+		
+		if(errorMessage.equals("-106")) {
+			String code = ExceptionCode.DECRYPTION_ERROR.getCode();
+			String message = ExceptionCode.DECRYPTION_ERROR.getMessage();
+			
+			errorCode.setErrorCodeDetail(code);
+			errorCode.setMessage(message);
+			
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorCode);
+		}
+		
+		
+		
 		String code = ExceptionCode.UNKNOWN_ERROR.getCode();
 		String message = ExceptionCode.UNKNOWN_ERROR.getMessage();
 		

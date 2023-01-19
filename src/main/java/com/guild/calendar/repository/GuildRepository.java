@@ -22,4 +22,8 @@ public interface GuildRepository extends JpaRepository<Guild, Long>{
 
 	public Guild findByMemberAndGuildName(Member guildOwner,String guildName);
 	
+	
+	
+	public Guild findByGuildOwnerAndId(String username, Long id);
+	
 }

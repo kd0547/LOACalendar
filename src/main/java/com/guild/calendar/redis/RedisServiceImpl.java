@@ -48,11 +48,14 @@ public class RedisServiceImpl implements RedisService{
 	public boolean deleteData(String key) {
 		boolean isDelete = jwTokenRedisService.deleteData(key);
 		
-		if(!isDelete) {
-			throw new IllegalStateException("-102");
-		}
 		
 		return  isDelete;
+	}
+
+	@Override
+	public String findData(String key) {
+		
+		return jwTokenRedisService.findData(key);
 	}
 
 }

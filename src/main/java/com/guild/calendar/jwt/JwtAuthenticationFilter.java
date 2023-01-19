@@ -58,7 +58,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 			
 		} catch (NullPointerException ne) {
-			ne.printStackTrace();
+			//ne.printStackTrace();
 			request.setAttribute("unauthorization",ExceptionCode.NO_TOKEN.getCode());
 			
 		} catch (ExpiredJwtException eje) {

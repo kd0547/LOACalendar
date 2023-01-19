@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.UUID;
 
 import javax.crypto.SecretKey;
+import javax.servlet.http.HttpServletRequest;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.guild.calendar.common.RedisPaserUtil;
 import com.guild.calendar.constant.Role;
 import com.guild.calendar.jwt.token.IpUserDetailsToken;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 
 @SpringBootTest
 public class JwtTokenTest {
@@ -61,16 +65,35 @@ public class JwtTokenTest {
 		
 		IpUserDetailsToken josnIpUserDetails = (IpUserDetailsToken) redisPaserUtil.JsonToObject(ipTokenJson, IpUserDetailsToken.class);
 		
-		System.out.println(username);
-		System.out.println("accessKey : "+josnIpUserDetails.getAccessToken());
-		System.out.println("refreshKey : "+josnIpUserDetails.getRefreshToken());
+		//System.out.println(username);
+		//System.out.println("accessKey : "+josnIpUserDetails.getAccessToken());
+		//System.out.println("refreshKey : "+josnIpUserDetails.getRefreshToken());
 		
 		
 		//assertThat(username).isEqualTo(authentication.getName());
 		
 	}
+	@Test
+	void TokenExpiredTest() {
+		
+		String accessToken = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0QG5hdmVyLmNvbSIsInJvbGVzIjpbeyJhdXRob3JpdHkiOiJST0xFX1VTRVIifV0sImlhdCI6MTY3MzI1MzA5NSwiZXhwIjoxNjczMjU0ODk1LCJqdGkiOiI4MTBlNjA3Yi03MDc4LTRhYjctYTQ4ZC1lYjBmMzI4MzQ5MGIifQ.7GU5LgWEU2GGsyv1t3vHEn_NPk0BVWejSeLmsGXLIK4";
+		
+		String bearerDeleteToken = getRefreshJwtFromRequest(accessToken);
+		
+		System.out.println(bearerDeleteToken);
+		
+	}
 	
 	
-
+	
+	
+	private String getRefreshJwtFromRequest(String request) {
+		
+		if(!request.startsWith("Bearer ")) {
+			throw new IllegalArgumentException("-002");
+		}
+		
+		return request.substring("Bearer ".length());
+	}  
 	
 }

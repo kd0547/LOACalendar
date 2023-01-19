@@ -1,5 +1,6 @@
 package com.guild.calendar.repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -24,8 +25,12 @@ public interface CalendarDetailRepository extends JpaRepository<CalendarDetail, 
 			,nativeQuery = true)
 	public List<CalendarDetail> selectByRaidStartDateWhereGuildName(String guildName,LocalDateTime startDate,LocalDateTime endDate);
 	
-	public List<CalendarDetail> findAllByCalendar(Long calendarId);
+	@Query("select c from CalendarDetail c where (c.calendar.id = ?1) and (c.startDate between ?2 and ?3)")
+	public List<CalendarDetail> findAllByCalendarIdBetweenDate(Long calendarId,LocalDate startDate, LocalDate endDate);
 	
+	
+	@Query("select c from CalendarDetail c where c.calendar.id = ?1")
+	public List<CalendarDetail> findAllByCalendar(Long calendarId);
 	
 	@Query("select c from CalendarDetail c where c.raidPlan.id = ?1 and c.calendar.id = ?2")
 	public List<CalendarDetail> findAllByRaidPlanAndCalendar(Long raidPlanId,Long calendarId);

@@ -33,4 +33,10 @@ public class JWTokenRedisService implements RedisService{
 		
 		return (String) redisTemplate.opsForValue().get(key);
 	}
+
+	@Override
+	public String findData(String key) {
+		
+		return (String) redisTemplate.opsForValue().get(key);
+	}
 }

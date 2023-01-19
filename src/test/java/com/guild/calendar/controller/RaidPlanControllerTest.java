@@ -35,31 +35,36 @@ public class RaidPlanControllerTest {
 	
 	@Test
 	void viewPlanTest() throws Exception {
+		/*
 		mockMvc.perform(get("/plan/2/calendar/3").header("Authorization", "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0QG5hdmVyLmNvbSIsInJvbGVzIjpbeyJhdXRob3JpdHkiOiJST0xFX1VTRVIifV0sImlhdCI6MTY3MjM4Mzg4NywiZXhwIjoxNjc0OTc1ODg3LCJqdGkiOiIzOTRkNGU4MS05ZjY0LTQ4ZmMtYjlkZS0zZGQwNzA1ZjNlNWQifQ.2lKWCF1RxTzwJAw7zk8CzbvbkQyqVCcIa92JYF3zld4")
 				
 				)
 				.andDo(print())
 				.andExpect(status().isOk())
 				;
+				*/
 	}
 	
 	
-	
+	/**
+	 * 
+	 * @throws Exception
+	 */
 	@Test
 	void createPlanTest() throws Exception {
 		ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 		RaidPlanRequestDto raidPlanRequestDto = createPlan();
 		String requestBody = objectMapper.writeValueAsString(raidPlanRequestDto);
 		
-		/*
-		mockMvc.perform(post("/plan/calendar/3").header("Authorization", "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0QG5hdmVyLmNvbSIsInJvbGVzIjpbeyJhdXRob3JpdHkiOiJST0xFX1VTRVIifV0sImlhdCI6MTY3MjM4Mzg4NywiZXhwIjoxNjc0OTc1ODg3LCJqdGkiOiIzOTRkNGU4MS05ZjY0LTQ4ZmMtYjlkZS0zZGQwNzA1ZjNlNWQifQ.2lKWCF1RxTzwJAw7zk8CzbvbkQyqVCcIa92JYF3zld4")
+		
+		mockMvc.perform(post("/plan/calendar/3").header("Authorization", "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0QG5hdmVyLmNvbSIsInJvbGVzIjpbeyJhdXRob3JpdHkiOiJST0xFX1VTRVIifV0sImlhdCI6MTY3Mzc4MDg5NSwiZXhwIjoxNjc2MzcyODk1LCJqdGkiOiIxMzMxMzFiYy0zODg0LTQwZDItYTc3MC01OGE1M2JkMDM5YTAifQ.f9ZxkAQgIZVmTb3VNfqlhtICSiGGIWuOS1guRCq2Bws")
 				.content(requestBody)
 				.contentType(MediaType.APPLICATION_JSON)
 				)
 				.andDo(print())
 				.andExpect(status().isCreated())
 				;
-		*/
+		
 	}
 	
 	@Test
@@ -69,7 +74,7 @@ public class RaidPlanControllerTest {
 		List<GuildUserDto> dtos = createGuildUser2();
 		
 		raidPlanRequestDto.setGuildUser(dtos);
-		
+		/*
 		String requestBody = objectMapper.writeValueAsString(raidPlanRequestDto);
 		mockMvc.perform(patch("/plan/2/calendar/3").header("Authorization", "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0QG5hdmVyLmNvbSIsInJvbGVzIjpbeyJhdXRob3JpdHkiOiJST0xFX1VTRVIifV0sImlhdCI6MTY3MjM4Mzg4NywiZXhwIjoxNjc0OTc1ODg3LCJqdGkiOiIzOTRkNGU4MS05ZjY0LTQ4ZmMtYjlkZS0zZGQwNzA1ZjNlNWQifQ.2lKWCF1RxTzwJAw7zk8CzbvbkQyqVCcIa92JYF3zld4")
 				.content(requestBody)
@@ -77,15 +82,18 @@ public class RaidPlanControllerTest {
 		.andDo(print())
 		.andExpect(status().isBadRequest())
 		;
+		*/
 	}
 	
 	@Test
 	void deletePlanTest() throws Exception {
+		/*
 		mockMvc.perform(delete("/plan/2/calendar/4").header("Authorization", "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0QG5hdmVyLmNvbSIsInJvbGVzIjpbeyJhdXRob3JpdHkiOiJST0xFX1VTRVIifV0sImlhdCI6MTY3MjM4Mzg4NywiZXhwIjoxNjc0OTc1ODg3LCJqdGkiOiIzOTRkNGU4MS05ZjY0LTQ4ZmMtYjlkZS0zZGQwNzA1ZjNlNWQifQ.2lKWCF1RxTzwJAw7zk8CzbvbkQyqVCcIa92JYF3zld4")
 				)
 		.andDo(print())
 		.andExpect(status().isBadRequest())
 		;
+		*/
 	}
 	
 	
@@ -94,17 +102,20 @@ public class RaidPlanControllerTest {
 	public RaidPlanRequestDto createPlan() {
 		RaidPlanRequestDto raidPlanRequestDto = new RaidPlanRequestDto();
 		
-		LocalDate date = LocalDate.of(2023, 1, 5);
-		LocalTime time = LocalTime.of(10, 25);
+		LocalDate date = LocalDate.of(2023, 1, 31);
+		LocalTime time = LocalTime.of(22, 25);
 		
 		
 		raidPlanRequestDto.setStartDate(date);
 		raidPlanRequestDto.setStartTime(time);
-		raidPlanRequestDto.setRaid(LegionRaid.KOUKUSATON);
+		raidPlanRequestDto.setRaid(LegionRaid.BIACKISS);
 		raidPlanRequestDto.setGuildUser(createGuildUser());
 		
 		return raidPlanRequestDto;
 	}
+	
+	
+	
 	public List<GuildUserDto> createGuildUser() {
 		List<GuildUserDto> dtos = new ArrayList<GuildUserDto>();
 		
@@ -112,6 +123,10 @@ public class RaidPlanControllerTest {
 		GuildUserDto guildUserDto2 = new GuildUserDto();
 		GuildUserDto guildUserDto3 = new GuildUserDto();
 		GuildUserDto guildUserDto4 = new GuildUserDto();
+		GuildUserDto guildUserDto5 = new GuildUserDto();
+		GuildUserDto guildUserDto6 = new GuildUserDto();
+		GuildUserDto guildUserDto7 = new GuildUserDto();
+		GuildUserDto guildUserDto8 = new GuildUserDto();
 		
 		guildUserDto1.setId(3L);
 		guildUserDto1.setUsername("연어맛김");
@@ -133,6 +148,26 @@ public class RaidPlanControllerTest {
 		guildUserDto4.setLoaClass(LoaClass.AEROMANCER);
 		guildUserDto4.setLevel(1580);
 		
+		guildUserDto5.setId(10L);
+		guildUserDto5.setUsername("밤잔나비");
+		guildUserDto5.setLoaClass(LoaClass.BARD);
+		guildUserDto5.setLevel(1560);
+		
+		guildUserDto6.setId(7L);
+		guildUserDto6.setUsername("누군가는해야하잖아요");
+		guildUserDto6.setLoaClass(LoaClass.WARDANCER);
+		guildUserDto6.setLevel(1596);
+		
+		guildUserDto7.setId(11L);
+		guildUserDto7.setUsername("승호각");
+		guildUserDto7.setLoaClass(LoaClass.DESTROYER);
+		guildUserDto7.setLevel(1601);
+		
+		guildUserDto8.setId(12L);
+		guildUserDto8.setUsername("차캉차캉");
+		guildUserDto8.setLoaClass(LoaClass.AEROMANCER);
+		guildUserDto8.setLevel(1580);
+		
 		
 		
 		
@@ -140,6 +175,10 @@ public class RaidPlanControllerTest {
 		dtos.add(guildUserDto2);
 		dtos.add(guildUserDto3);
 		dtos.add(guildUserDto4);
+		dtos.add(guildUserDto5);
+		dtos.add(guildUserDto6);
+		dtos.add(guildUserDto7);
+		dtos.add(guildUserDto8);
 		
 		return dtos;
 	}

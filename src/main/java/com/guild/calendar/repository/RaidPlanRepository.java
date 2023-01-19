@@ -18,6 +18,9 @@ public interface RaidPlanRepository extends JpaRepository<RaidPlan, Long>{
 	@Query("select r from RaidPlan r where r.id= ?1 and r.calendar.id = ?2")
 	public RaidPlan findByIdAndCalendar(Long raidPlanId, Long calendarId);
 	
+	@Query("select r from RaidPlan r where r.calendar.id = ?1")
+	public List<RaidPlan> findAllByCalendar(Long calendarId);
+	
 	
 	
 }

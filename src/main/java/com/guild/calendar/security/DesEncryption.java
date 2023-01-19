@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.encrypt.AesBytesEncryptor.CipherAlgorithm;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Base64Utils;
 
 
 @Component
@@ -44,10 +45,10 @@ public class DesEncryption {
 			
 			cipher.init(Cipher.ENCRYPT_MODE,key);
 			
-
-			Encoder encoder = Base64.getEncoder();
 			
-			return encoder.encodeToString(cipher.doFinal(url.getBytes()));
+			
+			
+			return Base64Utils.encodeToUrlSafeString(cipher.doFinal(url.getBytes()));
 			
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
@@ -86,7 +87,7 @@ public class DesEncryption {
 			cipher.init(Cipher.DECRYPT_MODE,key);
 			Decoder decoder = Base64.getDecoder();
 			
-			byte textBytes[] = decoder.decode(decodeURL);
+			byte textBytes[] = Base64Utils.decodeFromUrlSafeString(decodeURL);
 			
 			return new String (cipher.doFinal(textBytes),"UTF-8");
 			

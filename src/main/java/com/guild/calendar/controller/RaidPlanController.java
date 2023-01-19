@@ -18,9 +18,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import org.springframework.web.bind.annotation.RestController;
 
+import com.guild.calendar.Exception.ExceptionCode;
 import com.guild.calendar.dto.ErrorCode;
 import com.guild.calendar.dto.RaidPlanRequestDto;
 import com.guild.calendar.dto.RaidPlanResponseDto;
+import com.guild.calendar.dto.SuccessCode;
 import com.guild.calendar.service.CalendarDetailService;
 import com.guild.calendar.sub.RequestTime;
 
@@ -54,37 +56,33 @@ public class RaidPlanController {
 		return ResponseEntity.status(HttpStatus.OK).body(raidPlanResponseDto);
 	}
 	
-	
+	/**
+	 * 레이드 계획을 생성합니다. 
+	 * @param principal
+	 * @param calendarId
+	 * @param planRequestDto
+	 * @return
+	 */
 	@PostMapping("/calendar/{calendarId}")
 	public ResponseEntity<?> createRaidPlan(Principal principal,@PathVariable Long calendarId, @RequestBody RaidPlanRequestDto planRequestDto) {
 		requestTime.logTest("createRaidPlan 메서드 실행");
 		
 		String username = principal.getName();
 		
-		calendarDetailService.createRaidPlan(username,calendarId,planRequestDto);
-		return ResponseEntity.status(HttpStatus.CREATED).body("요청 성공");
+		Long saveId = calendarDetailService.createRaidPlan(username,calendarId,planRequestDto);
+		return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessCode(HttpStatus.CREATED.value(), saveId));
 	}
 	
 	
-	
-	
-	
-	@PutMapping("/{planId}/calendar/{calendarId}")
-	public ResponseEntity<?> putUpdateRaidPlan(Principal principal,@RequestBody RaidPlanRequestDto planRequestDto) {
-		
-		calendarDetailService.updateRaidPlanGuildUser(planRequestDto);
-		
-		return ResponseEntity.status(HttpStatus.OK).body("");
-	}
 	
 	@PatchMapping("/{planId}/calendar/{calendarId}")
 	public ResponseEntity<?> patchUpdateRaidPlan(Principal principal,@PathVariable Long planId,@PathVariable Long calendarId,@RequestBody RaidPlanRequestDto planRequestDto) {
 		String username = principal.getName();
 		
-		calendarDetailService.updateRaidPlanGuildUser(username,planId,calendarId,planRequestDto);
+		Long patchId = calendarDetailService.updateRaidPlanGuildUser(username,planId,calendarId,planRequestDto);
 		
 		
-		return ResponseEntity.status(HttpStatus.OK).body("");
+		return ResponseEntity.status(HttpStatus.ACCEPTED).body(new SuccessCode(HttpStatus.ACCEPTED.value(), patchId));
 	}
 	
 	
@@ -99,11 +97,18 @@ public class RaidPlanController {
 	
 	
 	
-	@ExceptionHandler(IllegalArgumentException.class)
-	public ResponseEntity<ErrorCode> handleIllegalArgumentException(IllegalArgumentException exception) {
-		ErrorCode errorCode = new  ErrorCode(HttpStatus.BAD_REQUEST,exception.getMessage());
+	@ExceptionHandler(IllegalStateException.class)
+	public ResponseEntity<ErrorCode> handleIllegalStateException(IllegalStateException exception) {
+		String errorMessage = exception.getMessage();
 		
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorCode);
+		if(errorMessage.equals("-190")) {
+			String code = ExceptionCode.NO_SUCH_CALENDAR.getCode();
+			String message = ExceptionCode.NO_SUCH_CALENDAR.getMessage();
+		
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorCode(HttpStatus.BAD_REQUEST, code, message));
+		}
+		
+		return null;
 	}
 	
 	

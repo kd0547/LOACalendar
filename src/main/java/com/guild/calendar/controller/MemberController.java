@@ -49,18 +49,7 @@ public class MemberController {
 		return ResponseEntity.status(HttpStatus.OK).body(successCode);
 	}
 	
-	@GetMapping("/view")
-	public ResponseEntity<?> viewMember(Principal principal) {
-		String email = principal.getName();
-		
-		MemberForm findMember = memberService.findMember(email);
-		
-		
-		
-		
-		
-		return null;	
-	}
+	
 	
 	
 	

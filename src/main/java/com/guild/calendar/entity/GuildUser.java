@@ -37,7 +37,7 @@ public class GuildUser extends BaseEntity {
 	
 	private String memberEmail;
 	
-	private String GuildName;
+	private String guildName;
 	
 	@Enumerated(EnumType.STRING)
 	private LoaClass loaClass; 
@@ -59,8 +59,18 @@ public class GuildUser extends BaseEntity {
 		return guildUser;
 	}
 	public void updateGuildUser(GuildUserDto guildUserDto) {
-		this.level = guildUserDto.getLevel();
-		this.username = guildUserDto.getUsername();
-		this.loaClass = guildUserDto.getLoaClass();
+		
+		if(guildUserDto.getLevel() != 0) {
+			this.level = guildUserDto.getLevel();
+		}
+		
+		if(guildUserDto.getUsername() != null) {
+			this.username = guildUserDto.getUsername();
+		}
+		
+		if(guildUserDto.getLoaClass() != LoaClass.NONE) {
+			this.loaClass = guildUserDto.getLoaClass();
+		}
+
 	}
 }

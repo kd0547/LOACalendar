@@ -20,6 +20,10 @@ public class SuccessCode {
 		this(stateCode,null,message);
 	}
 	
+	public SuccessCode(int stateCode,Long id) {
+		this(stateCode,id,null);
+	}
+	
 	public SuccessCode(int stateCode,Long id,String message) {
 		this.stateCode = stateCode;
 		this.id = id;

@@ -72,7 +72,7 @@ public class GuildService {
 		guild.setGuildName(guildForm.getGuildName());
 		
 		/*
-		 * 2013-01-18 추가 
+		 * 2023-01-18 추가 
 		 * GuildName이 GuildUser에 있으면 
 		 * Guild 엔티티에서 길드명을 변경하면서 GuildUser도 변경해줘야하는 문제 
 		 * 

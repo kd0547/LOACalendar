@@ -12,11 +12,10 @@
 - 2023-01-11 ~ 2023-01-19:  개발 중 놓쳤던 CRUD API의 문제을 파악하고 수정했습니다. 
 
 ### 구현 기능
+- RESTful 규약을 준수하여 URL 설계와 API Spec(HTTP Method, Status Code)을 만족하는 API 개발
 - DES 암호화 알고리즘과 Base64를 이용해 공유 URL 생성하고 캘린더를 다른 사람과 공유할 수 있도록 제작
-- 클라이언트에서 데이터 요청 시 JSON 에 RAW 데이터로 요청하는 문제점을 파악하고 RSA 알고리즘을 사용해 패스워드 암호화 구현
-- JWT와 Redis를 이용해 인증 구현 
-- 
-- RESTful 기반의 CRUD API 제작 
+- 클라이언트에서 데이터 요청 시 JSON 에 RAW 데이터로 요청하는 문제점을  RSA 알고리즘을 사용해 패스워드 암호화 구현
+- JWT를 확용해 보안을 적용하고 State-less 방식의 한계를 보완하기 위해 Redis를 이용해 DB 자원 접근을 최소화
 
 ### API URL
 ------------------
@@ -29,7 +28,7 @@
 | /guild | https://app.gitbook.com/o/2Kxp9w9wD6czxO5f7Vpa/s/4c6Lnb6whYxpAx2A81Na/reference/v1.0/guild |
 
 ### 개발 과정 중 생긴 문제와 해결 내용
-- 레이드 계획 수정 메서드에서 Update 쿼리가 2번 발생하는 문제 
+- 레이드 계획 수정 메서드에서 Update 쿼리가 2번 이상 발생하는 문제 [해결과정](https://jade-frill-5b8.notion.site/update-e111eb551d2a4fdba2e2dfafaf5ca27e)
 - Exception 발생 시 rollback되지 않고 저장되는 문제 
 - 
 

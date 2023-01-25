@@ -29,7 +29,7 @@
 
 ### 개발 과정 중 생긴 문제와 해결 내용
 - 레이드 계획 수정 메서드에서 Update 쿼리가 2번 이상 발생하는 문제 [해결과정](https://jade-frill-5b8.notion.site/update-e111eb551d2a4fdba2e2dfafaf5ca27e)
-- Exception 발생 시 rollback되지 않고 저장되는 문제 
+- 레이드 계획 생성 Exception 발생 시 rollback되지 않고 저장되는 문제 
 - 
 
 ### 아쉬운 점과 개선되어야할 점 

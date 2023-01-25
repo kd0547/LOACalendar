@@ -2,14 +2,14 @@
 - 인원 : 1명 
 - 기여 : 백엔드 전체
 
-//ERD, 화면설계 파일 추가하기 
+
 
 ### 제작 기간
 ------------------
 - 2022-12-11 ~ 2022-12-28:  ERD, 화면 설계 및 CRUD API 구현 
 - 2022-12-29 ~ 2023-01-05:  CRUD API 구현 및 API 문서화 
 - 2023-01-06 ~ 2023-01-10:  RefreshToken 추가 및 1차 리팩토링(공통 Exception 분리 및 상태코드 추가) 
-- 2023-01-11 ~ 2023-01-19:  개발 중 놓쳤던 CRUD API의 문제을 파악하고 수정했습니다. 
+- 2023-01-11 ~ 2023-xx-xx:  개발 중 놓쳤던 CRUD API의 문제을 파악하고 수정했습니다. 
 
 ### 구현 기능
 - RESTful 규약을 준수하여 URL 설계와 API Spec(HTTP Method, Status Code)을 만족하는 API 개발
@@ -17,19 +17,11 @@
 - 클라이언트에서 데이터 요청 시 JSON 에 RAW 데이터로 요청하는 문제점을  RSA 알고리즘을 사용해 패스워드 암호화 구현
 - JWT를 확용해 보안을 적용하고 State-less 방식의 한계를 보완하기 위해 Redis를 이용해 DB 자원 접근을 최소화
 
-### API URL
-------------------
-| url | API 설명 |
-| ------------- | ------------- |
-| /member  | https://app.gitbook.com/o/2Kxp9w9wD6czxO5f7Vpa/s/4c6Lnb6whYxpAx2A81Na/reference/v1.0/member  |
-| /auth | https://app.gitbook.com/o/2Kxp9w9wD6czxO5f7Vpa/s/4c6Lnb6whYxpAx2A81Na/reference/v1.0/auth  |
-| /calendar | https://app.gitbook.com/o/2Kxp9w9wD6czxO5f7Vpa/s/4c6Lnb6whYxpAx2A81Na/reference/v1.0/clendar |
-| /plan | https://app.gitbook.com/o/2Kxp9w9wD6czxO5f7Vpa/s/4c6Lnb6whYxpAx2A81Na/reference/v1.0/plan |
-| /guild | https://app.gitbook.com/o/2Kxp9w9wD6czxO5f7Vpa/s/4c6Lnb6whYxpAx2A81Na/reference/v1.0/guild |
+
 
 ### 개발 과정 중 생긴 문제와 해결 내용
 - 레이드 계획 수정 메서드에서 Update 쿼리가 2번 이상 발생하는 문제 [해결과정](https://jade-frill-5b8.notion.site/update-e111eb551d2a4fdba2e2dfafaf5ca27e)
-- 레이드 계획 생성 Exception 발생 시 rollback되지 않고 저장되는 문제 
+- 
 - 
 
 ### 아쉬운 점과 개선되어야할 점 
@@ -42,10 +34,16 @@
 
 
 ### 다음 계획 
+- Oauth2 인증을 이용해 카카오와 구글 등으로 가입이 가능하도록 할 것입니다. 
+- 실제 서비스가 가능하도록 프론트 엔드 개발을 진행할 것입니다.
 - 
 
 
 ### 개발 이력 
+
+2023 - 01 - 25
+- 레이드 계획 수정 메서드에서 Update 쿼리가 2번 이상 발생하는 문제 해결
+- 다른 소유자의 데이터를 계획에 포함하는 문제와 존재하지 않는 ID로 접근 시 예외가 발생하지 않는 문제 해결
+- 
 2023 - 01 - 19
 - 레이드 계획 생성과 수정에서 참여 인원이 레이드에서 요구하는 시작 인원과 맞지 않으면 저장 또는 수정할 수 없도록 변경했습니다.
--

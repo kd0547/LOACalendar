@@ -1,3 +1,13 @@
+
+### 개발 환경
+- 언어 : Java(JDK11),
+- 서버 : Tomcat
+- 프레임워크 : Spring Boot
+- DB : Mysql, Redis
+- API, 라이브러리 : JPA, Querydsl, Spring security
+
+
+
 ### 프로젝트 인원 및 기여도 
 - 인원 : 1명 
 - 기여 : 백엔드 전체
@@ -5,11 +15,12 @@
 
 
 ### 제작 기간
-------------------
+
 - 2022-12-11 ~ 2022-12-28:  ERD, 화면 설계 및 CRUD API 구현 
 - 2022-12-29 ~ 2023-01-05:  CRUD API 구현 및 API 문서화 
 - 2023-01-06 ~ 2023-01-10:  RefreshToken 추가 및 1차 리팩토링(공통 Exception 분리 및 상태코드 추가) 
 - 2023-01-11 ~ 2023-xx-xx:  개발 중 놓쳤던 CRUD API의 문제을 파악하고 수정했습니다. 
+
 
 ### 구현 기능
 - RESTful 규약을 준수하여 URL 설계와 API Spec(HTTP Method, Status Code)을 만족하는 API 개발

@@ -11,8 +11,7 @@
 ### 프로젝트 인원 및 기여도 
 - 인원 : 1명 
 - 기여 : 백엔드 전체
-
-
+- [작성중인 API 명세서](https://app.gitbook.com/o/2Kxp9w9wD6czxO5f7Vpa/s/4c6Lnb6whYxpAx2A81Na/reference/v1.0)
 
 ### 제작 기간
 

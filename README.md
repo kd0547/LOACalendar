@@ -43,6 +43,9 @@
 ## Redis (Cache)
 
 
+![data](https://github.com/kd0547/LOACalendar/assets/86393702/ab124106-2878-47fa-aec2-b1b59e83f38b)
+
+
 
 ### 개발 환경
 - 언어 : Java(JDK11),

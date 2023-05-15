@@ -26,6 +26,8 @@
   - dto : request/response를 관리한다. 
 
 ## Spring Security(Security)
+- CSRF : disable
+- Token Authentication Filter : JwtAuthenticationFilter.class
 
 ### 커스텀 암호화 
 
@@ -39,6 +41,9 @@
 
 
 ## Redis (Cache)
+
+
+
 ### 개발 환경
 - 언어 : Java(JDK11),
 - 서버 : Tomcat

@@ -43,7 +43,7 @@
 ## Redis (Cache)
 
 
-![data](https://github.com/kd0547/LOACalendar/assets/86393702/ab124106-2878-47fa-aec2-b1b59e83f38b)
+![제목 없는 다이어그램](https://github.com/kd0547/LOACalendar/assets/86393702/b0dac306-c6e1-4886-8f45-a4a8c5a61c64)
 
 
 - IpUserDetailsToken <-> String 변환

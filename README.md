@@ -22,7 +22,7 @@
 - Web
   - Controller : API를 관리한다. 
   - Service : 비지니스로직을 관리한다. 
-  - Repository : ㅓㅖㅁ
+  - Repository : 
   - dto : request/response를 관리한다. 
 
 ## Spring Security(Security)
@@ -34,40 +34,50 @@
 
 ### 커스텀 암호화 
 > 유저의 이메일과 패스워드 암호화에 RSA, 캘린더 공유에 DES 암호화를 사용했습니다. 
-
-
+   
 #### 캘린더공유URL 생성 메서드 
 ```
 @PostMapping("/share/{id}")
-	public ResponseEntity<?> shreURLCreate(Principal principal,@PathVariable("id") Long id) {
-		String username = principal.getName();
+public ResponseEntity<?> shreURLCreate(Principal principal,@PathVariable("id") Long id) {
+	String username = principal.getName();
+	Long memberId = memberService.findByEmail(username);
+	CalendarShareURL calendarShareURL = new CalendarShareURL
+		.Builder()
+			.shareCalendarId(id)
+			.memberId(memberId)
+			.expiredTime(LocalDate.now().plusDays(30L))
+			.build();
 		
-		Long memberId = memberService.findByEmail(username);
+	try {
+		ShareURL shareURL = new ShareURL();
+		String rawData = objectMapper.writeValueAsString(calendarShareURL);
+		String encode = desEncryption.encryptURL(rawData);
 		
-		CalendarShareURL calendarShareURL = new CalendarShareURL();
-		calendarShareURL.setCalendarId(id);
-		calendarShareURL.setMemberId(memberId);
-		calendarShareURL.setExpiredTime(LocalDate.now().plusDays(30L));
-		try {
-			ShareURL shareURL = new ShareURL();
-			String rawData = objectMapper.writeValueAsString(calendarShareURL);
-			String encode = desEncryption.encryptURL(rawData);
-		
-			shareURL.setUrl(encode);
+		shareURL.setUrl(encode);
 			
-			return ResponseEntity.status(HttpStatus.CREATED).body(shareURL);
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorCode(HttpStatus.INTERNAL_SERVER_ERROR,"서버 장애 발생"));
-		}
+		return ResponseEntity.status(HttpStatus.CREATED).body(shareURL);
+	} catch (JsonProcessingException e) {
+		e.printStackTrace();
+		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+			.body(new ErrorCode(HttpStatus.INTERNAL_SERVER_ERROR,"서버 장애 발생"));
 	}
+}
 
 
 ```
+#### email, password 암호화용 공유키 전송
+```
+@GetMapping("/encrypt") 
+public ResponseEntity<?> loginencrypt(){
+	LoginEncryption loginEncryption = new LoginEncryption(); 
+ 
+	loginEncryption.setAlgorithm(keyPair.getPublic().getAlgorithm());
+	loginEncryption.setFormat(keyPair.getPublic().getFormat());
+	loginEncryption.setEncoded(keyPair.getPublic().getEncoded());
 
-
-
+	return ResponseEntity.status(HttpStatus.OK).body(loginEncryption);
+}
+```
 
 
 ## JPA (ORM)

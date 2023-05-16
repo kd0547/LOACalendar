@@ -46,6 +46,33 @@
 ![data](https://github.com/kd0547/LOACalendar/assets/86393702/ab124106-2878-47fa-aec2-b1b59e83f38b)
 
 
+- IpUserDetailsToken <-> String 변환
+```
+public class RedisServiceImpl implements RedisService{
+...
+  @Override
+  public void setData(String key, Object value) {
+	  if(key == null || value == null) 
+		  throw new NullPointerException();
+		
+	  String valueString = paserUtil.ObjectToJSON(value);
+	  jwTokenRedisService.setData(key, valueString);
+ }
+...
+  @Override
+  public <T> Object getData(String key,Class<T> classes) {
+	  String object = (String) jwTokenRedisService.getData(key, classes);
+	  if(object == null) {
+		  throw new IllegalStateException("-102");
+	  }
+	return paserUtil.JsonToObject(object, classes);
+  }
+  ...
+}
+```
+- setData()메서드는 IpUserDetailsToken을 String으로 변환합니다. 
+- 
+
 
 ### 개발 환경
 - 언어 : Java(JDK11),

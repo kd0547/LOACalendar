@@ -26,14 +26,47 @@
   - dto : request/response를 관리한다. 
 
 ## Spring Security(Security)
+구조는 다음과 같습니다. 
+- Session Creation Policy : STATELESS
 - CSRF : disable
 - Token Authentication Filter : JwtAuthenticationFilter.class
 
+
 ### 커스텀 암호화 
+> 유저의 이메일과 패스워드 암호화에 RSA, 캘린더 공유에 DES 암호화를 사용했습니다. 
 
 
-구조는 다음과 같습니다. 
-- Session Creation Policy : STATELESS
+#### 캘린더공유URL 생성 메서드 
+```
+@PostMapping("/share/{id}")
+	public ResponseEntity<?> shreURLCreate(Principal principal,@PathVariable("id") Long id) {
+		String username = principal.getName();
+		
+		Long memberId = memberService.findByEmail(username);
+		
+		CalendarShareURL calendarShareURL = new CalendarShareURL();
+		calendarShareURL.setCalendarId(id);
+		calendarShareURL.setMemberId(memberId);
+		calendarShareURL.setExpiredTime(LocalDate.now().plusDays(30L));
+		try {
+			ShareURL shareURL = new ShareURL();
+			String rawData = objectMapper.writeValueAsString(calendarShareURL);
+			String encode = desEncryption.encryptURL(rawData);
+		
+			shareURL.setUrl(encode);
+			
+			return ResponseEntity.status(HttpStatus.CREATED).body(shareURL);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(new ErrorCode(HttpStatus.INTERNAL_SERVER_ERROR,"서버 장애 발생"));
+		}
+	}
+
+
+```
+
+
 
 
 
@@ -41,10 +74,9 @@
 
 
 ## Redis (Cache)
-
+> 
 
 ![제목 없는 다이어그램](https://github.com/kd0547/LOACalendar/assets/86393702/b0dac306-c6e1-4886-8f45-a4a8c5a61c64)
-
 
 - IpUserDetailsToken <-> String 변환
 ```

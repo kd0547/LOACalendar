@@ -8,6 +8,8 @@
 - JPA (ORM)
 - Redis (Cache)
 - Mysql
+- DicodeBot
+> 
 
 - ERD : https://dbdiagram.io/d/64619089dca9fb07c4116924
 - GitBoot : https://app.gitbook.com/o/2Kxp9w9wD6czxO5f7Vpa/s/4c6Lnb6whYxpAx2A81Na/reference/v1.0
@@ -114,6 +116,9 @@ public class RedisServiceImpl implements RedisService{
 ```
 - setData()메서드는 IpUserDetailsToken을 String으로 변환합니다. 
 - 
+
+
+### DicodeBot
 
 
 ### 개발 환경

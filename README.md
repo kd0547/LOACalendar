@@ -125,20 +125,6 @@ public class RedisServiceImpl implements RedisService{
 
 
 
-### 개발 환경
-- 언어 : Java(JDK11),
-- 서버 : Tomcat
-- 프레임워크 : Spring Boot
-- DB : Mysql, Redis
-- API, 라이브러리 : JPA, Querydsl, Spring security
-
-
-
-### 프로젝트 인원 및 기여도 
-- 인원 : 1명 
-- 기여 : 백엔드 전체
-
-
 
 ### 제작 기간
 ------------------

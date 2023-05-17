@@ -118,7 +118,11 @@ public class RedisServiceImpl implements RedisService{
 - 
 
 
-### DicodeBot
+### DicodeBot 과정
+>
+>
+![discode_연동](https://github.com/kd0547/LOACalendar/assets/86393702/d5978c47-1173-4619-86b7-e1976354a78e)
+
 
 
 ### 개발 환경

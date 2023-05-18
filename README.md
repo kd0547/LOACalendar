@@ -125,22 +125,27 @@ public class RedisServiceImpl implements RedisService{
 
 
 ### 라이센스 키 생성 
-> 디스코드 봇 인증용 라이센스 키를 생성합니다.
-> 실제 코드는 링크에 있습니다.  
+> 공유할 캘린더의 ID와 이메일을 암호화해 디스코드 봇 인증용 라이센스 키를 생성합니다.
 ```
-테스트 데이터 : test1234@naver.com
-결과 : 9ADBCF4E-1F933C1C-701E4FCD-5394DA52-670B3E11-31428CF1
+테스트 데이터 : {"email":"user","calendarID":1}
+예상 결과 : E7910202-805D0654-30D4F579-F8116701-75B7AFC5-F7CF40BB-955E151B-F8848644
 ```
-### @Test 결과
+#### @Test
 ```
 @Test
-public void LicenseKeyTest() {
-	String enc = key.Issue(email);		
-	assertThat(enc).isEqualTo(result);
-	//assertThat(enc).isNotEqualTo(result);
+@WithMockUser
+void issueLicenseTest() throws Exception {
+	MvcResult result = mockMvc.perform(get("/license/1"))
+	.andExpect(status().isOk())
+	.andDo(print())
+	.andReturn();
+		
+	String content = result.getResponse().getContentAsString();
+		
+	assertThat(TEST_data).isEqualTo(content);	
 }
 ```
-
+### 라이센스 키 검증 
 
 
 ### 제작 기간

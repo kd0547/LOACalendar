@@ -124,6 +124,23 @@ public class RedisServiceImpl implements RedisService{
 ![discode_연동](https://github.com/kd0547/LOACalendar/assets/86393702/d5978c47-1173-4619-86b7-e1976354a78e)
 
 
+### 라이센스 키 생성 
+> 디스코드 봇 인증용 라이센스 키를 생성합니다.
+> 실제 코드는 링크에 있습니다.  
+```
+테스트 데이터 : test1234@naver.com
+결과 : 9ADBCF4E-1F933C1C-701E4FCD-5394DA52-670B3E11-31428CF1
+```
+### @Test 결과
+```
+@Test
+public void LicenseKeyTest() {
+	String enc = key.Issue(email);		
+	assertThat(enc).isEqualTo(result);
+	//assertThat(enc).isNotEqualTo(result);
+}
+```
+
 
 
 ### 제작 기간

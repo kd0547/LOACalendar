@@ -5,10 +5,12 @@
 > 사용한 기술 스택입니다.
 - Spring Boot(API Server)
 - Spring Security(Security)
+- Spring Batch (일정 관리) - 예정
+- Spring OAuth2.0 (구글, 카카오) - 예정
 - JPA (ORM)
 - Redis (Cache)
 - Mysql
-- DicodeBot
+- DicodeBot (사용 중인 커뮤니티 서버 연동)
 > 
 
 - ERD : https://dbdiagram.io/d/64619089dca9fb07c4116924

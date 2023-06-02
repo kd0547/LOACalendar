@@ -59,7 +59,7 @@
 > 유저의 이메일과 패스워드 암호화에 RSA, 캘린더 공유에 DES 암호화를 사용했습니다. 
    
 #### 캘린더공유URL 생성 메서드 
-```
+```JAVA
 @PostMapping("/share/{id}")
 public ResponseEntity<?> shreURLCreate(Principal principal,@PathVariable("id") Long id) {
 	String username = principal.getName();
@@ -89,7 +89,7 @@ public ResponseEntity<?> shreURLCreate(Principal principal,@PathVariable("id") L
 
 ```
 #### email, password 암호화용 공유키 전송
-```
+```JAVA
 @GetMapping("/encrypt") 
 public ResponseEntity<?> loginencrypt(){
 	LoginEncryption loginEncryption = new LoginEncryption(); 
@@ -107,12 +107,26 @@ public ResponseEntity<?> loginencrypt(){
 
 
 ## Redis (Cache)
-> 
+> 유저의 CustomToken을 Redis에 저장합니다. Duration.ofDays(30L)  
+```JAVA
+RedisCacheConfiguration configuration = 
+	RedisCacheConfiguration
+		.defaultCacheConfig(loader.getClassLoader())
+		.disableCachingNullValues()
+		.entryTtl(Duration.ofDays(30L));
+```
+
+#### 로그인 절차 
+![제목 없는 다이어그램 (2)](https://github.com/kd0547/LOACalendar/assets/86393702/4a0f6e9b-67b1-4bb5-9b71-acc3dee1052d)
+
+
 
 ![제목 없는 다이어그램](https://github.com/kd0547/LOACalendar/assets/86393702/b0dac306-c6e1-4886-8f45-a4a8c5a61c64)
 
 - IpUserDetailsToken <-> String 변환
 ```
+
+```JAVA
 public class RedisServiceImpl implements RedisService{
 ...
   @Override
@@ -147,7 +161,7 @@ public class RedisServiceImpl implements RedisService{
 
 ### 라이센스 키 생성 
 > 공유할 캘린더의 ID와 이메일을 암호화해 디스코드 봇 인증용 라이센스 키를 생성합니다.
-```
+```JAVA
 테스트 데이터 : {"email":"user","calendarID":1}
 예상 결과 : E7910202-805D0654-30D4F579-F8116701-75B7AFC5-F7CF40BB-955E151B-F8848644
 ```

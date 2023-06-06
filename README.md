@@ -105,9 +105,10 @@ public ResponseEntity<?> loginencrypt(){
 
 ## JPA (ORM)
 
-
 ## Redis (Cache)
 > 유저의 CustomToken을 Redis에 저장합니다. Duration.ofDays(30L)  
+
+#### 환경 설정
 ```JAVA
 RedisCacheConfiguration configuration = 
 	RedisCacheConfiguration
@@ -115,6 +116,40 @@ RedisCacheConfiguration configuration =
 		.disableCachingNullValues()
 		.entryTtl(Duration.ofDays(30L));
 ```
+
+#### 토큰 발급
+> 새로운 Refresh 토큰을 발급할 때 Redis에 저장된 토큰 값과 비교해 만료되지 않은 토큰 값으로 새로운 토큰 발급하는 문제점을 막았습니다.
+```JAVA
+@PostMapping("/refresh") 
+public ResponseEntity<?> createRefreshToken(HttpServletRequest request) {
+	String accessToken = getJwtFromRequest(request);
+	String refreshToken = getRefreshJwtFromRequest(request);
+		
+	//Refresh Token 유효성 검사
+	Claims claims = customTokenProvider.validateToken(refreshToken);
+		
+	String username = claims.getIssuer();
+	String roles = customTokenProvider.extractRoles(claims);
+	CustomToken customToken = (CustomToken) redisService.getData(username, CustomToken.class);
+		
+	//redis에 있는 Refresh Token만 사용할 수 있다.
+	if(isNotRefreshTokenAlreadyUsed(refreshToken,customToken.getRefreshToken()) 
+			&& isNotAccessTokenAlreadyUsed(accessToken,customToken.getAccessToken())) {
+		throw new IllegalArgumentException("-110");
+	}
+		
+	Authentication authentication = createUsernamePasswordAuthenticationToken(username,roles);
+	CustomToken newCustomToken = (CustomToken) customTokenProvider.generateToken(authentication);
+		
+	//Redis에서 기존 Token을 삭제하고 새로 생성한 Token을 저장한다.
+	redisService.deleteData(username);
+	redisService.setData(authentication.getName(), newCustomToken);
+		
+	LoginResponse token = new LoginResponse(newCustomToken.getAccessToken(),newCustomToken.getRefreshToken());
+	return ResponseEntity.status(HttpStatus.OK).body(token);
+	}
+```
+
 
 #### 로그인 절차 
 ![제목 없는 다이어그램 (2)](https://github.com/kd0547/LOACalendar/assets/86393702/4a0f6e9b-67b1-4bb5-9b71-acc3dee1052d)

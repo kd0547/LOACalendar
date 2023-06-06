@@ -106,19 +106,62 @@ public ResponseEntity<?> loginencrypt(){
 ## JPA (ORM)
 
 ## Redis (Cache)
-> 유저의 CustomToken을 Redis에 저장합니다. Duration.ofDays(30L)  
+> Redis에 최신 토큰 정보를 저장하여 토큰의 중복 생성 및 접근을 방지했습니다. 아래는 환경 설정과 구현 코드입니다.
 
 #### 환경 설정
+> Redis 캐시의 만료 시간과 AccessToken의 만료 시간을 설정하여, 
+> 토큰의 재발급이 없을 경우 캐시가 삭제되고 사용자가 자동으로 로그아웃되도록 구현하였습니다. 
 ```JAVA
-RedisCacheConfiguration configuration = 
-	RedisCacheConfiguration
-		.defaultCacheConfig(loader.getClassLoader())
-		.disableCachingNullValues()
-		.entryTtl(Duration.ofDays(30L));
+public class JwtProvider {
+	private static final ChronoUnit RefreshTokenValidMinutes = ChronoUnit.DAYS;
+	private static final Long AccessTokenTime = 14L;
+}
+
+@Configuration
+public class RedisConfig {
+	@Bean
+	public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory,ResourceLoader loader) {
+		RedisCacheConfiguration configuration = 
+		RedisCacheConfiguration
+			.defaultCacheConfig(loader.getClassLoader())
+			.disableCachingNullValues()
+			.entryTtl(Duration.ofDays(15L));
+	}
+}
 ```
 
+#### 로그인
+>
+```JAVA
+@PostMapping("/login")
+public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {	
+	String plainPassword = decryptPassword(loginRequest.getSecret());
+	loginRequest.setSecret(plainPassword);
+	//유저 인증 
+	Member findMember = memberService.findByEmail(loginRequest);	
+	Authentication authentication = createUsernamePasswordAuthenticationToken(findMember.getEmail(),findMember.getRole().toString());
+		
+	//중복 로그인 방지 
+	if(isHaveUsernameRedis(findMember.getUsername())) {
+		String username = findMember.getUsername();
+			
+		//redis에 저장한 토큰값을 가져온다.
+		CustomToken redisToken = (CustomToken) redisService.getData(username,CustomToken.class);
+			
+		LoginResponse token = new LoginResponse(redisToken.getAccessToken(),redisToken.getRefreshToken());
+		return ResponseEntity.status(HttpStatus.OK).body(token);
+	} else {
+		//엑세스 토큰 생성
+		CustomToken customToken =  customTokenProvider.generateToken(authentication);
+		//토큰 Redis 저장
+		redisService.setData(authentication.getName(),customToken);
+		LoginResponse token = new LoginResponse(customToken.getAccessToken(),customToken.getRefreshToken());
+		return ResponseEntity.status(HttpStatus.OK).body(token);
+	}
+}
+```
 #### 토큰 발급
-> 새로운 Refresh 토큰을 발급할 때 Redis에 저장된 토큰 값과 비교해 만료되지 않은 토큰 값으로 새로운 토큰 발급하는 문제점을 막았습니다.
+> 유효하지 않은 토큰 값으로부터 새로운 토큰을 발급하는 상황을 방지하였습니다.
 ```JAVA
 @PostMapping("/refresh") 
 public ResponseEntity<?> createRefreshToken(HttpServletRequest request) {
@@ -150,42 +193,46 @@ public ResponseEntity<?> createRefreshToken(HttpServletRequest request) {
 	}
 ```
 
-
-#### 로그인 절차 
-![제목 없는 다이어그램 (2)](https://github.com/kd0547/LOACalendar/assets/86393702/4a0f6e9b-67b1-4bb5-9b71-acc3dee1052d)
-
-
-
-![제목 없는 다이어그램](https://github.com/kd0547/LOACalendar/assets/86393702/b0dac306-c6e1-4886-8f45-a4a8c5a61c64)
-
-- IpUserDetailsToken <-> String 변환
-```
-
+#### 토큰 인증
+> 요청에서 Redis에 보관 중인 AccessToken과 비교하여 해당 토큰이 사용 가능한지 확인하는 기능을 구현하였습니다.
+ 
 ```JAVA
-public class RedisServiceImpl implements RedisService{
-...
-  @Override
-  public void setData(String key, Object value) {
-	  if(key == null || value == null) 
-		  throw new NullPointerException();
+@Slf4j
+public class JwtAuthenticationFilter extends OncePerRequestFilter{
+	private final CustomJwtProvider customTokenProvider;
+	private final RedisService redisService;
+	
+	public JwtAuthenticationFilter(CustomJwtProvider customTokenProvider, RedisService redisService) {
+		this.customTokenProvider = customTokenProvider;
+		this.redisService = redisService;
+	}
+	@Override
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+			throws ServletException, IOException {
+		...
+			String accessToken = getJwtFromRequest(request);
+			Claims claims = customTokenProvider.validateToken(accessToken);
+			String username = claims.getSubject();
+			String role = customTokenProvider.extractRoles(claims);
 		
-	  String valueString = paserUtil.ObjectToJSON(value);
-	  jwTokenRedisService.setData(key, valueString);
- }
-...
-  @Override
-  public <T> Object getData(String key,Class<T> classes) {
-	  String object = (String) jwTokenRedisService.getData(key, classes);
-	  if(object == null) {
-		  throw new IllegalStateException("-102");
-	  }
-	return paserUtil.JsonToObject(object, classes);
-  }
-  ...
+			//redis에서 유저 데이터를 조회한다.
+			CustomToken customToken = (CustomToken) redisService.getData(username, CustomToken.class);
+			
+			if(!accessToken.equals(customToken.getAccessToken()) ) {
+				throw new InvalidTokenException("4");
+			}
+			UserDetails userDetails =  User.builder()
+				.username(username)
+				.roles(role)
+				.build();
+		
+			Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
+			SecurityContextHolder.getContext().setAuthentication(authentication);
+		...
+	}
 }
+
 ```
-- setData()메서드는 IpUserDetailsToken을 String으로 변환합니다. 
-- 
 
 
 ## DicodeBot 연동 과정

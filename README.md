@@ -4,16 +4,8 @@
 - 클라이언트에서 데이터 요청 시 JSON 에 RAW 데이터로 요청하는 문제점을  RSA 알고리즘을 사용해 패스워드 암호화 구현
 - JWT를 확용해 보안을 적용하고 State-less 방식의 한계를 보완하기 위해 Redis를 이용해 DB 자원 접근을 최소화
 
->
-### 목표 기능 
-> 2023.05.25 부터 시작했습니다.
-- 서버에 저장된 사용자의 일정을 디스코드 커뮤니티에 알림으로 전송하는 기능 
-- DicodeBot (인증및 연동 기능)
-- Spring OAuth2.0 (구글, 카카오) - 예정
 
-
-
-## Project Structure
+### Project Structure
 > 1인 개발 프로젝트입니다. 
 > Spring Boot로 API를 구현했습니다. 추후 프론트엔드(React) 개발 예정입니다. 
 > 사용한 기술 스택입니다.
@@ -263,11 +255,18 @@ void issueLicenseTest() throws Exception {
 
 - 
 
-### 개발 고민
-- 레이드 계획 수정 메서드에서 Update 쿼리가 2번 이상 발생하는 문제 [해결과정](https://jade-frill-5b8.notion.site/update-e111eb551d2a4fdba2e2dfafaf5ca27e)
+### 목표 기능 
+> 2023.05.25 부터 시작했습니다.
+- 서버에 저장된 사용자의 일정을 디스코드 커뮤니티에 알림으로 전송하는 기능 
+- DicodeBot (인증및 연동 기능)
+- Spring OAuth2.0 (구글, 카카오) - 예정
 
+
+### 개발 고민
+- GuildUser의 정보를 로스트아크 홈페이지에서 받아와 존재하는 유저인지를 확인하는 기능을 구현해야할까 고민중입니다. 
+
+- 레이드 계획 수정 메서드에서 Update 쿼리가 2번 이상 발생하는 문제 [해결과정](https://jade-frill-5b8.notion.site/update-e111eb551d2a4fdba2e2dfafaf5ca27e)
 - 처음 설계 부터 개발 과정까지 이력을 작성하지 못한 것입니다. 단위 테스트로 개발을 진행해 문제점들을 바로 해결하고 이력으로 남기지 못 해 진행된 내용 파악이 늦어 개발 기간이 늘어났습니다. 
 - API 문서를 처음 만들어서 처음 접할 때 쉽게 이해할 수 있도록 만들기 어려웠습니다. 
-
 - GuildUser Entity에 길드명이 필요해서 컬럼을 추가했지만 Guild Entity의 길드명을 변경할 때 GuildUser의 길드명을 수정할 UPDATE 쿼리가 최대 50개 까지 발생했습니다. 
 요청 시 Guild 와 GuildUser 각각 1번씩 2번의 SELECT 쿼리문이 발생하는 것이 비효율적이라고 생각한 것이 잘못되었습니다. 길드명은 자주 변경되는 컬럼이 아니고 Bulk를 사용해 문제를 보완했습니다. 

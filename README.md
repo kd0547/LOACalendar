@@ -231,6 +231,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 ### 라이센스 키 생성 
 > 공유할 캘린더의 ID와 이메일을 암호화해 디스코드 봇 인증용 라이센스 키를 생성합니다.
 ```JAVA
+@GetMapping("/{id}")
+public ResponseEntity<?> issueLicense(Principal principal,@PathVariable Long id) {
+		
+	String email = principal.getName();
+	Long calendarId = id;
+	LicenseKeyDto keyDto = new LicenseKeyDto(email, calendarId);
+		
+	String json = null;
+	json = objectMapperUtil.writeValueAsString(keyDto);
+	String key = license.Issue(json);
+	
+	return ResponseEntity.status(HttpStatus.OK).body(key);
+}
+```
+
+```JAVA
 테스트 데이터 : {"email":"user","calendarID":1}
 예상 결과 : E7910202-805D0654-30D4F579-F8116701-75B7AFC5-F7CF40BB-955E151B-F8848644
 ```

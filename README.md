@@ -233,15 +233,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 ```JAVA
 @GetMapping("/{id}")
 public ResponseEntity<?> issueLicense(Principal principal,@PathVariable Long id) {
-		
+
 	String email = principal.getName();
 	Long calendarId = id;
-	LicenseKeyDto keyDto = new LicenseKeyDto(email, calendarId);
+		
+	LicenseKeyDto keyDto = new LicenseKeyDto.Builder()
+			.email(email)
+			.calendarID(calendarId)
+			.expiredTime(LocalDateTime.now().plusMinutes(30L))
+			.build();
 		
 	String json = null;
 	json = objectMapperUtil.writeValueAsString(keyDto);
 	String key = license.Issue(json);
-	
+		
 	return ResponseEntity.status(HttpStatus.OK).body(key);
 }
 ```

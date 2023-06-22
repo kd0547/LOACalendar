@@ -271,10 +271,29 @@ void issueLicenseTest() throws Exception {
 }
 ```
 ### 라이센스 키 검증 
+```SQL
+SELECT d.channel_id AS channelId,
+	r.raid_start_date AS startDate,
+        r.raid_start_time AS startTime,
+        r.legion_raid AS legionRaid,
+        c.guild_user_id AS guildUserId,
+        c.raid_plan AS raidPlan,
+        g.username AS username,
+        g.level AS level,
+        g.loa_class AS loaClass
+FROM discode_info d
+	INNER JOIN calendar_detail c ON d.calendar_id = c.calendar_id
+        INNER JOIN raid_plan r ON c.raid_plan = r.raid_plan
+        INNER JOIN guild_user g ON g.guild_user_id = c.guild_user_id
+WHERE d.alarmyn = 'Y'
+	AND r.raid_start_date = :startDateValue
+        AND r.raid_start_time BETWEEN :startTimeValue AND :endTimeValue
+```
 
+### 알람 기능 
 
+#### SQL문 작성 
 
-- 
 
 ### 목표 기능 
 > 2023.05.25 부터 시작했습니다.

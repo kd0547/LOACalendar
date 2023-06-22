@@ -270,7 +270,13 @@ void issueLicenseTest() throws Exception {
 	assertThat(TEST_data).isEqualTo(content);	
 }
 ```
-### 라이센스 키 검증 
+### 라이센스 키 검증
+
+
+### 알람 기능 
+
+#### SQL문 작성 
+> 테이블 3개를 Inner join 합니다. 
 ```SQL
 SELECT d.channel_id AS channelId,
 	r.raid_start_date AS startDate,
@@ -290,9 +296,14 @@ WHERE d.alarmyn = 'Y'
         AND r.raid_start_time BETWEEN :startTimeValue AND :endTimeValue
 ```
 
-### 알람 기능 
+| channelId | startDate | startTime | legionRaid | guildUserId | raidPlan | username | level | loaClass |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 비공개| 2023-06-23 | 11:00:00 | KOUKUSATON | 8 | 9 | 비공개 | 1601 | DESTROYER |
+| 비공개 | 2023-06-23 | 11:00:00 | KOUKUSATON | 5 | 9 | 비공개 | 1560 | SCRAPPER |
+| 비공개 | 2023-06-23 | 11:00:00 | KOUKUSATON | 3 | 9 | 비공개 | 1560 | BARD |
+| 비공개 | 2023-06-23 | 11:00:00 | KOUKUSATON | 9 | 9 | 비공개 |1580 | AEROMANCER |
 
-#### SQL문 작성 
+
 
 
 ### 목표 기능 

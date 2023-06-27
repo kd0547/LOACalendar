@@ -100,6 +100,43 @@ public ResponseEntity<?> loginencrypt(){
 
 ## JPA (ORM)
 
+### XML
+```XML
+<query>
+	<![CDATA[
+		SELECT d.channel_id AS channelId,
+                       r.raid_start_date AS startDate,
+                       r.raid_start_time AS startTime,
+                       r.legion_raid AS legionRaid,
+                       c.guild_user_id AS guildUserId,
+                       c.raid_plan AS raidPlan,
+                       g.username AS username,
+                       g.level AS level,
+                       g.loa_class AS loaClass
+                FROM discode_info d
+                INNER JOIN calendar_detail c ON d.calendar_id = c.calendar_id
+                INNER JOIN raid_plan r ON c.raid_plan = r.raid_plan
+                INNER JOIN guild_user g ON g.guild_user_id = c.guild_user_id
+                WHERE d.alarmyn = 'Y'
+                  AND r.raid_start_date = :startDateValue
+                  AND r.raid_start_time BETWEEN :startTimeValue AND :endTimeValue
+            ]]>
+</query>
+```
+### AlarmRepository
+```JAVA
+public List<Alarm> findAlarm(LocalDate startDate,LocalTime startTime,LocalTime endTime) {
+       
+        return entityManager.createNamedQuery("getAlarm",Alarm.class)
+        		.setParameter("startDateValue", startDate)
+        		.setParameter("startTimeValue", startTime)
+        		.setParameter("endTimeValue", endTime)
+        		.getResultList();
+    }
+```
+
+
+
 ## Redis (Cache)
 > Redis에 최신 토큰 정보를 저장하여 토큰의 중복 생성 및 접근을 방지했습니다. 아래는 환경 설정과 구현 코드입니다.
 

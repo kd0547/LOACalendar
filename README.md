@@ -1,21 +1,9 @@
-### 구현 기능 정리
-- RESTful 규약을 준수하여 URL 설계와 API Spec(HTTP Method, Status Code)을 만족하는 API 개발
-- DES 암호화 알고리즘과 Base64를 이용해 공유 URL 생성하고 캘린더를 다른 사람과 공유할 수 있도록 제작
-- 클라이언트에서 데이터 요청 시 JSON 에 RAW 데이터로 요청하는 문제점을  RSA 알고리즘을 사용해 패스워드 암호화 구현
-- JWT를 확용해 보안을 적용하고 State-less 방식의 한계를 보완하기 위해 Redis를 이용해 DB 자원 접근을 최소화
-
-
-### Project Structure
-> 1인 개발 프로젝트입니다. 
-> Spring Boot로 API를 구현했습니다. 추후 프론트엔드(React) 개발 예정입니다. 
-> 사용한 기술 스택입니다.
+### 사용한 기술 및 프레임워크 
 - Spring Boot(API Server)
 - Spring Security(Security)
 - JPA (ORM)
 - Redis (Cache)
 - Mysql
-
-
 
 
 ###
@@ -36,16 +24,36 @@
   - dto : request/response를 관리한다. 
 
 ## Spring Security(Security)
-구조는 다음과 같습니다. 
-- Session Creation Policy : STATELESS
-- CSRF : disable
-- Token Authentication Filter : JwtAuthenticationFilter.class
+> Spring Security을 사용한 보안 적용 뿐만 아니라 디스코드 서버 인증,캘린더 공유용 URL 생, 로그인 암호화용 로직을 구현했습니다. 
 
+### Srping Security config
+```JAVA
+@Bean
+public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+	http.cors()
+	.and()
+		.csrf().disable()
+		.exceptionHandling()
+		.authenticationEntryPoint(unAuthorizedHandler)
+	.and()
+		.sessionManagement()
+		.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+	.and()
+            	.authorizeRequests() 
+            	.antMatchers("/calendar/share/url/**","/auth/**").permitAll()
+            	.antMatchers("/**")
+            	.authenticated()
+        .and()
+        .formLogin().disable().headers().frameOptions().disable();
+	;	
+	http.addFilterBefore(new JwtAuthenticationFilter(jwTokenProvider(),redisService),UsernamePasswordAuthenticationFilter.class);
+	return http.build();
+  }
+```
+RESTful API 사용하기 위해 `.csrf().disable()`와 `SessionCreationPolicy.STATELESS` 설정을 했습니다. 또한 `UsernamePasswordAuthenticationFilter`에서 발생한 오류를 `.authenticationEntryPoint(unAuthorizedHandler)`에서 처리하도록 설정했습니다. 
 
-### 커스텀 암호화 
-> 유저의 이메일과 패스워드 암호화에 RSA, 캘린더 공유에 DES 암호화를 사용했습니다. 
-   
 #### 캘린더공유URL 생성 메서드 
+URL을 공유해 URL을 
 ```JAVA
 @PostMapping("/share/{id}")
 public ResponseEntity<?> shreURLCreate(Principal principal,@PathVariable("id") Long id) {
@@ -75,7 +83,7 @@ public ResponseEntity<?> shreURLCreate(Principal principal,@PathVariable("id") L
 
 
 ```
-#### email, password 암호화용 공유키 전송
+#### 로그인용 암호화화
 ```JAVA
 @GetMapping("/encrypt") 
 public ResponseEntity<?> loginencrypt(){
@@ -225,7 +233,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 ## DicodeBot 연동 과정
 >
 >
-![discode_연동](https://github.com/kd0547/LOACalendar/assets/86393702/d5978c47-1173-4619-86b7-e1976354a78e)
+//![discode_연동](https://github.com/kd0547/LOACalendar/assets/86393702/d5978c47-1173-4619-86b7-e1976354a78e)
 
 
 ### 라이센스 키 생성 
@@ -274,9 +282,10 @@ void issueLicenseTest() throws Exception {
 
 
 ### 알람 기능 
+> 레이드 일정을 디스코드 서버에 전송하는 알람 기능을 스프링스케줄러를 이용해 구현했습니다.
 
 #### SQL문 작성 
-> 테이블 3개를 Inner join 합니다. 
+>  discode_info, calendar_detail, raid_plan, guild_user 테이블을 조인하여 알림 기능이 활성화된 일정 정보를 가져옵니다
 ```SQL
 SELECT d.channel_id AS channelId,
 	r.raid_start_date AS startDate,
@@ -295,7 +304,6 @@ WHERE d.alarmyn = 'Y'
 	AND r.raid_start_date = :startDateValue
         AND r.raid_start_time BETWEEN :startTimeValue AND :endTimeValue
 ```
-
 | channelId | startDate | startTime | legionRaid | guildUserId | raidPlan | username | level | loaClass |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 비공개| 2023-06-23 | 11:00:00 | KOUKUSATON | 8 | 9 | 비공개 | 1601 | DESTROYER |
@@ -303,7 +311,110 @@ WHERE d.alarmyn = 'Y'
 | 비공개 | 2023-06-23 | 11:00:00 | KOUKUSATON | 3 | 9 | 비공개 | 1560 | BARD |
 | 비공개 | 2023-06-23 | 11:00:00 | KOUKUSATON | 9 | 9 | 비공개 |1580 | AEROMANCER |
 
+데이터 베이스에서 가져온 데이터를 raidPlan을 기준으로 AlarmDto 클래스를 만듭니다. 
 
+>
+#### 스케줄러 설정
+```JAVA
+@Component
+public class AlarmScheduler {
+	
+	@Autowired
+	private ThreadPoolTaskScheduler scheduler;
+	
+	@Autowired 
+	private AlarmService alarmService;
+	
+	@Autowired
+	private DiscodeSender discodeSender;
+	
+	private Map<String, ScheduledFuture<?>> jobMap = new HashMap<>();
+	
+	
+	@Scheduled(cron = "0 30 23 * * *")
+	public void mainTask() {
+		LocalDate now = LocalDate.now().plusDays(1);
+		LocalTime start = LocalTime.of(0, 0);
+		LocalTime end = LocalTime.of(23, 59);
+		
+		List<AlarmDto> alarmDtos = alarmService.findAlarmsByTimeRange(now, start, end);
+		Collections.sort(alarmDtos);
+		
+		
+		runTask(now,alarmDtos);
+	
+	}
+
+    public void runTask(LocalDate now,List<AlarmDto> alarmDtos) {
+		AlarmExecutor alarmExecutor = new AlarmExecutor(alarmDtos,discodeSender);
+		alarmExecutor.setNow(now);
+		ScheduledFuture<?> scheduledFuture = scheduler.schedule(alarmExecutor, new CronTrigger("0 * * * * ?"));
+    
+    }
+}
+```
+
+
+#### 스케줄러 실행
+> 
+```JAVA
+@Override
+public void run() {
+
+	try {
+		LocalDate today = LocalDate.now();
+		if (today.isEqual(expiredtime)) {
+			throw new InterruptedException("error");
+		}
+		if(alarmDtos.isEmpty()) {
+			throw new InterruptedException("success");
+		}			
+
+		while (!alarmDtos.isEmpty()) {
+			LocalTime now = LocalTime.now();
+			AlarmDto alarmDto = alarmDtos.get(0);
+				
+			// 레이드 시간 < 현재시간 
+			// ex) 12:00 < 현재시간
+			if (checkTimeOver(now, alarmDto)) {
+				alarmDto.setUsed(true);
+				alarmDtos.remove(0);
+				continue;
+			}
+				
+			// 레이드 시간 - 15 <= 현재시간 < 레이드 시간 
+			// ex) 12:00 < 현재시간 < 12:15
+			if (checkAlarmTimeRange(now, alarmDto) && isNotUsed(alarmDto)) {
+				discodeSender.channelMessageSender(alarmDto);
+				alarmDto.setUsed(true);
+				alarmDtos.remove(0);
+				continue;
+			}
+				
+			//  현재시간 < 레이드 시간 - 15
+			//  현재시간 < 22:30 - 15분
+			if(isTimeThresholdNotReached(now,alarmDto)) {
+				throw new InterruptedException("success");
+			}	
+		}
+	} catch (InterruptedException e) {
+		String code = e.getMessage();
+		if (code.equals("success")) {
+	
+		}
+
+		if (code.equals("error")) {
+
+		}
+	}
+}
+```
+
+### 구현 기능 정리
+- RESTful 규약을 준수하여 URL 설계와 API Spec(HTTP Method, Status Code)을 만족하는 API 개발
+- DES 암호화 알고리즘과 Base64를 이용해 공유 URL 생성하고 캘린더를 다른 사람과 공유할 수 있도록 제작
+- 클라이언트에서 데이터 요청 시 JSON 에 RAW 데이터로 요청하는 문제점을  RSA 알고리즘을 사용해 패스워드 암호화 구현
+- JWT를 확용해 보안을 적용하고 State-less 방식의 한계를 보완하기 위해 Redis를 이용해 DB 자원 접근을 최소화
 
 
 ### 목표 기능 

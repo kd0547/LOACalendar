@@ -1,12 +1,10 @@
-### 사용한 기술 및 프레임워크 
+## 사용한 기술 및 프레임워크 
 - Spring Boot(API Server)
 - Spring Security(Security)
 - JPA (ORM)
 - Redis (Cache)
 - Mysql
-
-
-###
+>
 - ERD : https://dbdiagram.io/d/64619089dca9fb07c4116924
 - GitBoot : https://app.gitbook.com/o/2Kxp9w9wD6czxO5f7Vpa/s/4c6Lnb6whYxpAx2A81Na/reference/v1.0
 
@@ -52,8 +50,10 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 ```
 RESTful API 사용하기 위해 `.csrf().disable()`와 `SessionCreationPolicy.STATELESS` 설정을 했습니다. 또한 `UsernamePasswordAuthenticationFilter`에서 발생한 오류를 `.authenticationEntryPoint(unAuthorizedHandler)`에서 처리하도록 설정했습니다. 
 
-#### 캘린더공유URL 생성 메서드 
-URL을 공유해 URL을 
+<br>
+
+### 캘린더공유URL 생성 
+> URL을 생성해 다른 사용자 들과 캘린더를 공유할 수 있도록 구현했습니다. 현재는 조회(공유) 기능만 구현했습니다. 추후 로그인한 유저가 해당 URL을 이용해 추가, 삭제 기능을 구현할 것입니다. 
 ```JAVA
 @PostMapping("/share/{id}")
 public ResponseEntity<?> shreURLCreate(Principal principal,@PathVariable("id") Long id) {
@@ -80,10 +80,12 @@ public ResponseEntity<?> shreURLCreate(Principal principal,@PathVariable("id") L
 			.body(new ErrorCode(HttpStatus.INTERNAL_SERVER_ERROR,"서버 장애 발생"));
 	}
 }
-
-
 ```
-#### 로그인용 암호화화
+
+<br>
+
+### 로그인용 암호화
+> 개발 시 HTTP 를 사용하기 때문에 body가 평문으로 보입니다. 
 ```JAVA
 @GetMapping("/encrypt") 
 public ResponseEntity<?> loginencrypt(){
@@ -97,14 +99,17 @@ public ResponseEntity<?> loginencrypt(){
 }
 ```
 
+<br>
 
 ## JPA (ORM)
-
-### XML
+> 회원가입, 캘린더 등의 CRUD 뿐만 아니라 알람 기능을 위한 XML을 사용해 매핑을 구현했습니다. 여러 테이블을 JOIN하고 결과를 받기 때문에 엔티티가 필요 없다고 판단했습니다. 
+> 
+#### XML 매핑
 ```XML
-<query>
-	<![CDATA[
-		SELECT d.channel_id AS channelId,
+<named-native-query name="getAlarm" result-set-mapping="AlarmMapping">
+		<query>
+						 <![CDATA[
+                SELECT d.channel_id AS channelId,
                        r.raid_start_date AS startDate,
                        r.raid_start_time AS startTime,
                        r.legion_raid AS legionRaid,
@@ -121,9 +126,26 @@ public ResponseEntity<?> loginencrypt(){
                   AND r.raid_start_date = :startDateValue
                   AND r.raid_start_time BETWEEN :startTimeValue AND :endTimeValue
             ]]>
-</query>
+        </query>
+
+	</named-native-query>
+	<sql-result-set-mapping name="AlarmMapping">
+		<constructor-result target-class="com.guild.calendar.scheduler.Alarm">
+			<column name="channelId" class="java.lang.Long" />
+			<column name="startDate" class="java.time.LocalDate" />
+			<column name="startTime" class="java.time.LocalTime" />
+			<column name="legionRaid" class="java.lang.String" />
+			<column name="guildUserId" class="java.lang.Long" />
+			<column name="raidPlan" class="java.lang.Long" />
+			<column name="username" class="java.lang.String" />
+			<column name="level" class="java.lang.Integer" />
+			<column name="loaClass" class="java.lang.String" />
+		</constructor-result>
+	</sql-result-set-mapping>
 ```
-### AlarmRepository
+
+
+#### AlarmRepository
 ```JAVA
 public List<Alarm> findAlarm(LocalDate startDate,LocalTime startTime,LocalTime endTime) {
        

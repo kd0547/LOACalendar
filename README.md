@@ -4,10 +4,13 @@
 - JPA (ORM)
 - Redis (Cache)
 - Mysql
->
+
+<br>
+
 - ERD : https://dbdiagram.io/d/64619089dca9fb07c4116924
 - GitBoot : https://app.gitbook.com/o/2Kxp9w9wD6czxO5f7Vpa/s/4c6Lnb6whYxpAx2A81Na/reference/v1.0
 
+<br>
 
 ## Spring Boot(API Server)
 > 클라이언트에서 요청한 데이터를 JSON으로 Response 한다. 
@@ -21,8 +24,11 @@
   - Repository : 
   - dto : request/response를 관리한다. 
 
+<br>
+
 ## Spring Security(Security)
 > Spring Security을 사용한 보안 적용 뿐만 아니라 디스코드 서버 인증,캘린더 공유용 URL 생, 로그인 암호화용 로직을 구현했습니다. 
+<br>
 
 ### Srping Security config
 ```JAVA
@@ -84,8 +90,41 @@ public ResponseEntity<?> shreURLCreate(Principal principal,@PathVariable("id") L
 
 <br>
 
+### 공유 캘린더 조회
+> 캘린더 공유 URL에 만료시간을 추가하여, 공유 URL은 설정된 만료시간 이후에 더 이상 접근할 수 없도록 구현하였습니다.
+```JAVA
+@GetMapping("/share/url/{yearMonth}")
+public ResponseEntity<?> shreURLCreate(@RequestParam("encode") String encode,@PathVariable("yearMonth")String yearMonth) {
+	if(encode != null) {	
+		String object = desEncryption.decrypttURL(encode);
+		try {
+			CalendarShareURL calendarShareURL = objectMapper.readValue(object, CalendarShareURL.class);
+			LocalDate date = calendarShareURL.getExpiredTime();
+			LocalDate nowDate = LocalDate.now();
+				
+			if(nowDate.isBefore(date)) {
+				String paddingYearMonth = yearMonth + "01";
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd", Locale.KOREA);
+				LocalDate requestDate = LocalDate.parse(paddingYearMonth, formatter);
+					
+				CalendarDetailsDto calendarDetailsDto = calendarDetailService.findCalendarAll(requestDate,calendarShareURL.getShareCalendarId(),calendarShareURL.getMemberId());
+				calendarDetailsDto.setYearMonth(yearMonth);
+					
+				return ResponseEntity.status(HttpStatus.OK).body(calendarDetailsDto);
+			}			
+		} catch (JsonProcessingException e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+				.body(new ErrorCode(HttpStatus.INTERNAL_SERVER_ERROR,"서버 장애 발생"));
+		}
+	}
+	return null;
+}
+```
+
+<br>
+
 ### 로그인용 암호화
-> 개발 시 HTTP 를 사용하기 때문에 body가 평문으로 보입니다. 
+> 개발 시 HTTP를 사용하기 때문에 body가 평문으로 보입니다. 이를 보완하기 위해 RSA 암호화를 사용하여 이메일과 패스워드드를 암호화합니다.  
 ```JAVA
 @GetMapping("/encrypt") 
 public ResponseEntity<?> loginencrypt(){
@@ -102,9 +141,10 @@ public ResponseEntity<?> loginencrypt(){
 <br>
 
 ## JPA (ORM)
-> 회원가입, 캘린더 등의 CRUD 뿐만 아니라 알람 기능을 위한 XML을 사용해 매핑을 구현했습니다. 여러 테이블을 JOIN하고 결과를 받기 때문에 엔티티가 필요 없다고 판단했습니다. 
-> 
-#### XML 매핑
+> 회원가입, 캘린더 등의 CRUD를 구현했습니다. 알람 기능을 위한 XML을 사용해 매핑을 추가했습니다. 여러 테이블을 JOIN하고 결과를 받기 때문에 엔티티가 필요 없다고 판단했습니다.
+<br>
+
+### XML 매핑
 ```XML
 <named-native-query name="getAlarm" result-set-mapping="AlarmMapping">
 		<query>
@@ -144,8 +184,9 @@ public ResponseEntity<?> loginencrypt(){
 	</sql-result-set-mapping>
 ```
 
+<br>
 
-#### AlarmRepository
+### AlarmRepository
 ```JAVA
 public List<Alarm> findAlarm(LocalDate startDate,LocalTime startTime,LocalTime endTime) {
        
@@ -157,12 +198,14 @@ public List<Alarm> findAlarm(LocalDate startDate,LocalTime startTime,LocalTime e
     }
 ```
 
-
+<br>
 
 ## Redis (Cache)
 > Redis에 최신 토큰 정보를 저장하여 토큰의 중복 생성 및 접근을 방지했습니다. 아래는 환경 설정과 구현 코드입니다.
 
-#### 환경 설정
+<br>
+
+### 환경 설정
 > Redis 캐시의 만료 시간과 AccessToken의 만료 시간을 설정하여, 
 > 토큰의 재발급이 없을 경우 캐시가 삭제되고 사용자가 자동으로 로그아웃되도록 구현하였습니다. 
 ```JAVA
@@ -184,8 +227,10 @@ public class RedisConfig {
 }
 ```
 
-#### 로그인
->
+<br>
+
+### 로그인
+> 인증이 완료되면 JWT 토큰을 발급합니다. 중복 로그인 시 Redis에 저장되어 있는 AccessToken과 RefreshToken을 반환합니다. 
 ```JAVA
 @PostMapping("/login")
 public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {	
@@ -214,7 +259,10 @@ public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
 	}
 }
 ```
-#### 토큰 발급
+
+<br>
+
+### 토큰 발급
 > 유효하지 않은 토큰 값으로부터 새로운 토큰을 발급하는 상황을 방지하였습니다.
 ```JAVA
 @PostMapping("/refresh") 
@@ -247,7 +295,9 @@ public ResponseEntity<?> createRefreshToken(HttpServletRequest request) {
 	}
 ```
 
-#### 토큰 인증
+<br>
+
+### 토큰 인증
 > 요청에서 Redis에 보관 중인 AccessToken과 비교하여 해당 토큰이 사용 가능한지 확인하는 기능을 구현하였습니다.
  
 ```JAVA
@@ -288,12 +338,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 
 ```
 
+<br>
 
-## DicodeBot 연동 과정
->
->
-//![discode_연동](https://github.com/kd0547/LOACalendar/assets/86393702/d5978c47-1173-4619-86b7-e1976354a78e)
+## DicodeBot 연동 
+> 디스코드와 웹 캘린더를 연동하기 위한 기능을 구현했습니다. 
 
+<br>
 
 ### 라이센스 키 생성 
 > 공유할 캘린더의 ID와 이메일을 암호화해 디스코드 봇 인증용 라이센스 키를 생성합니다.
@@ -318,12 +368,17 @@ public ResponseEntity<?> issueLicense(Principal principal,@PathVariable Long id)
 }
 ```
 
+<br>
+
 ```JAVA
 테스트 데이터 : {"email":"user","calendarID":1}
 예상 결과 : E7910202-805D0654-30D4F579-F8116701-75B7AFC5-F7CF40BB-955E151B-F8848644
 ```
-#### @Test
-```
+
+<br>
+
+### @Test
+```JAVA
 @Test
 @WithMockUser
 void issueLicenseTest() throws Exception {
@@ -337,11 +392,55 @@ void issueLicenseTest() throws Exception {
 	assertThat(TEST_data).isEqualTo(content);	
 }
 ```
-### 라이센스 키 검증
 
+<br>
+
+### 라이센스 키 검증
+> 웹 페이지에서 생성한 라이센스 키 값을 디스코드에서 인증합니다. 만료시간을 추가하여 설정된 만료시간 이후에는 더 이상 접근할 수 없도록 구현하였습니다.
+```JAVA
+@Override
+public void onMessageReceived(MessageReceivedEvent event) {
+	if(event.getAuthor().isBot()) return;
+	String[] message = event.getMessage().getContentRaw().split(" ");
+	if(message.length == 1 )
+		event.getChannel().sendMessage("!인증 <인증키>").queue();
+	String command = message[0];
+		
+	if (command.equals("!인증")) {
+		//인증키 유효성 검사 추가하기 
+			
+		String key = message[1];
+		String data = license.verify(key);
+		
+		LicenseKeyDto licenseKeyDto = objectMapper.readValue(data,LicenseKeyDto.class);
+			
+		LocalDateTime ExpiredTime = licenseKeyDto.getExpiredTime();
+		
+		LocalDateTime now = LocalDateTime.now();
+		if(ExpiredTime.isBefore(now)) {
+			throw new IllegalStateException("test");
+		}	
+		//서버 소유자 아이디
+		String owner_id= event.getGuild().getOwnerId();
+		MessageChannel channel = event.getChannel();
+		String channel_id =  channel.getId();
+		licenseService.saveLicense(key,owner_id,channel_id,licenseKeyDto);
+			
+	}
+}
+```
+
+### 인증 예시
+> 디스코드 채널 메시지에서 아래와 같이 입력하면 서버에서 채널, 서버 생성자 등의 정보를 수집합니다.  
+```
+!인증 E7910202805D065430D4F579F811670175B7AFC5F7CF40BB698A41F7356D060CE03C64A7AF0AC4042F74E09CCEF526E9C2B967A8B2A117A7
+```
+<br>
 
 ### 알람 기능 
 > 레이드 일정을 디스코드 서버에 전송하는 알람 기능을 스프링스케줄러를 이용해 구현했습니다.
+
+<br>
 
 #### SQL문 작성 
 >  discode_info, calendar_detail, raid_plan, guild_user 테이블을 조인하여 알림 기능이 활성화된 일정 정보를 가져옵니다
@@ -372,8 +471,11 @@ WHERE d.alarmyn = 'Y'
 
 데이터 베이스에서 가져온 데이터를 raidPlan을 기준으로 AlarmDto 클래스를 만듭니다. 
 
->
+
+<br>
+
 #### 스케줄러 설정
+> 23시 30분에 `alarmService`에서 데이터를 가져와 정렬한 후 `runTask()`를 실행합니다. 
 ```JAVA
 @Component
 public class AlarmScheduler {
@@ -413,9 +515,10 @@ public class AlarmScheduler {
 }
 ```
 
+<br>
 
 #### 스케줄러 실행
-> 
+> 시작시간 15분 전에 알림이 전송됩니다. 오류로 인해 전송이 실패하면 전송 리스트에서 삭제합니다. 
 ```JAVA
 @Override
 public void run() {
@@ -468,6 +571,25 @@ public void run() {
 	}
 }
 ```
+- 전송 실패 시 로직 추가하기
+ 
+
+### 테스트
+```JAVA
+@Test
+public void testRunTask2() throws InterruptedException{
+
+	List<AlarmDto> alarmDtos = createAlarmDtoList();
+		
+	AlarmExecutor alarmExecutor = new AlarmExecutor(alarmDtos, discodeSender);
+	alarmExecutor.setNow(LocalDate.now().plusDays(1L));
+	ScheduledFuture<?> scheduledFuture = scheduler.schedule(alarmExecutor, new CronTrigger("0 * * * * ?"));	
+	...
+}
+```
+### 실행 결과 
+
+
 
 ### 구현 기능 정리
 - RESTful 규약을 준수하여 URL 설계와 API Spec(HTTP Method, Status Code)을 만족하는 API 개발

@@ -10,19 +10,6 @@
 - ERD : https://dbdiagram.io/d/64619089dca9fb07c4116924
 - GitBoot : https://app.gitbook.com/o/2Kxp9w9wD6czxO5f7Vpa/s/4c6Lnb6whYxpAx2A81Na/reference/v1.0
 
-<br>
-
-## Spring Boot(API Server)
-> 클라이언트에서 요청한 데이터를 JSON으로 Response 한다. 
-
-- config : 프로젝트 환경을 관리한다. 
-- Exception : Custom Exception을 관리한다. 
-- Security : Security, jwt 관련 기능들을 관리한다. 
-- Web
-  - Controller : API를 관리한다. 
-  - Service : 비지니스로직을 관리한다. 
-  - Repository : 
-  - dto : request/response를 관리한다. 
 
 <br>
 
@@ -588,14 +575,16 @@ public void testRunTask2() throws InterruptedException{
 }
 ```
 ### 실행 결과 
+![화면 캡처 2023-06-30 125631](https://github.com/kd0547/LOACalendar/assets/86393702/7153b328-dce1-4385-a431-83060b54feb5)
 
 
 
-### 구현 기능 정리
+### 구현 기능 
 - RESTful 규약을 준수하여 URL 설계와 API Spec(HTTP Method, Status Code)을 만족하는 API 개발
 - DES 암호화 알고리즘과 Base64를 이용해 공유 URL 생성하고 캘린더를 다른 사람과 공유할 수 있도록 제작
 - 클라이언트에서 데이터 요청 시 JSON 에 RAW 데이터로 요청하는 문제점을  RSA 알고리즘을 사용해 패스워드 암호화 구현
 - JWT를 확용해 보안을 적용하고 State-less 방식의 한계를 보완하기 위해 Redis를 이용해 DB 자원 접근을 최소화
+- DES를 사용해 라이센스 키 발급 기능을 구현했습니다. 
 
 
 ### 목표 기능 
@@ -606,10 +595,7 @@ public void testRunTask2() throws InterruptedException{
 
 
 ### 개발 고민
-- GuildUser의 정보를 로스트아크 홈페이지에서 받아와 존재하는 유저인지를 확인하는 기능을 구현해야할까 고민중입니다. 
-
-- 레이드 계획 수정 메서드에서 Update 쿼리가 2번 이상 발생하는 문제 [해결과정](https://jade-frill-5b8.notion.site/update-e111eb551d2a4fdba2e2dfafaf5ca27e)
-- 처음 설계 부터 개발 과정까지 이력을 작성하지 못한 것입니다. 단위 테스트로 개발을 진행해 문제점들을 바로 해결하고 이력으로 남기지 못 해 진행된 내용 파악이 늦어 개발 기간이 늘어났습니다. 
-- API 문서를 처음 만들어서 처음 접할 때 쉽게 이해할 수 있도록 만들기 어려웠습니다. 
-- GuildUser Entity에 길드명이 필요해서 컬럼을 추가했지만 Guild Entity의 길드명을 변경할 때 GuildUser의 길드명을 수정할 UPDATE 쿼리가 최대 50개 까지 발생했습니다. 
-요청 시 Guild 와 GuildUser 각각 1번씩 2번의 SELECT 쿼리문이 발생하는 것이 비효율적이라고 생각한 것이 잘못되었습니다. 길드명은 자주 변경되는 컬럼이 아니고 Bulk를 사용해 문제를 보완했습니다. 
+- 디스코드 연동 시 라이센스 키가 유출되면 만료시간 전까지 다른 서버에서도 사용 가능합니다. 이는 인증과 디스코드 서버의 정보 수집이 같이 진행되기 때문에 라이센스 키 유효기간만 검사하는 로직만 있습니다.
+  - 해결 방법으로는 디스코드 정보를 먼저 수집한 후 `OFF` 처리하고 라이센스 키를 사용 시 `ON`으로 지정해 사용 가능하도록 하는 것이지만 단점으로는 디스코드 더미 서버를 만들어 디스코드 서버 정보만 저장 수집해 불필요한 데이터가 쌓이는 악용이 있습니다.
+  - 두번째는  DB에 라이센스 키 테이블을 만들고 라이센스 키 생성 시 테이블에 저장, 디스코드 인증에서 테이블과 비교해서 사용을 판단하는 방법, 단점으로는 테이블을 추가로 만들어야 합니다. 현재는 키 생성에 제한이 없지만 테이블을 만들면 제한해야 합니다.
+  - 세번쨰는 키의 유효키의 만료기간을 30초 ~ 1분 으로 설정하기 

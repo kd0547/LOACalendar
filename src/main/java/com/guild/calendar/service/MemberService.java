@@ -15,6 +15,7 @@ import com.guild.calendar.entity.Member;
 import com.guild.calendar.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -67,7 +68,7 @@ public class MemberService implements UserDetailsService{
 	}
 	/**
 	 * 
-	 * 이메일을 검사한다. 중복된 이메일이 있는 경우 <b>IllegalStateException</b> 이 발생한다.</br>
+	 * 이메일을 중복 검사 중복된 이메일이 있는 경우 <b>IllegalStateException</b> 이 발생한다.</br>
 	 * 
 	 * @param memberForm
 	 * @exception IllegalStateException
@@ -84,35 +85,23 @@ public class MemberService implements UserDetailsService{
 	}
 
 	/**
-	 * 이메일 중복 가입 검사에서 예외가 없으면 DB에 저장
-	 * 
+	 * 유저 저장
 	 * @param memberForm
 	 * @return Long DB에 저장한 ID 값을 반환 
 	 */
+	@Transactional
 	public Long saveMember(MemberForm memberForm) {
+		//이메일 중복 검사
 		duplicateEmail(memberForm);
+
 		Member member = Member.createMember(memberForm,passwordEncoder);
-		
 		Member saveMember = memberRepository.save(member);
 		
 		return saveMember.getId(); 
 	}
 
-
-	public MemberForm findMember(String email) {
-		return null;
-	}
-
 	public Long findByEmail(String username) {
 		Member member = memberRepository.findByEmail(username);
-		
-		
 		return member.getId();
 	}
-
-	
-
-
-	
-
 }

@@ -6,9 +6,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-@ToString
-@Getter
-@Setter
+
+@Setter @ToString @Getter
 public class CalendarShareURL {
 	
 	private Long calendarId;

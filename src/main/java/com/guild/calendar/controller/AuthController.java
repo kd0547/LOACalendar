@@ -8,6 +8,7 @@ import java.util.Base64;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties.Jwt;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -52,24 +54,124 @@ import io.jsonwebtoken.security.SignatureException;
 
 
 @Controller
+@RequiredArgsConstructor
 @RequestMapping("/auth")
 public class AuthController {
-	
-	
-	@Autowired
-	private MemberService memberService;
-	
-	@Autowired
-	private CustomTokenProvider customTokenProvider;
-	
-	@Autowired
-	private RedisService redisService;
-	
-	@Autowired
-	private KeyPair keyPair;
-	
-	@Autowired
-	private RSAEncryption rsaEncryption;
+
+	private final MemberService memberService;
+	private final CustomTokenProvider customTokenProvider;
+	private final RedisService redisService;
+	private final KeyPair keyPair;
+	private final RSAEncryption rsaEncryption;
+
+
+
+
+
+	/**
+	 *
+	 * 로그인 API 입니다. RequestBody에서 데이터를 받아 패스워드를 디코딩 후, 인증이 이루어집니다. 인증이 완료되면 엑세스 토큰과 리프레시 토큰을 발급합니다
+	 * 유저 또는 패스워드가 일치하지 않을 경우, <b>UsernameNotFoundException</b>,<b>IllegalArgumentException</b>이 발생합니다. 에러코드는 -101 입니다.
+	 * 또한 로그인한 유저가 API를 요청할 경우 IllegalStateException이 발생합니다. 에러코드는 -105 입니다.
+	 * @param loginRequest
+	 * @return ResponseEntity
+	 */
+	@PostMapping("/signin")
+	public ResponseEntity<?> login(
+			@RequestBody @Validated
+			LoginRequest loginRequest) {
+
+		//패스워드 암호화
+		String plainPassword = decryptPassword(loginRequest.getSecret());
+		loginRequest.setSecret(plainPassword);
+
+		UserDetail findMember = memberService.findByEmail(loginRequest);
+
+		UserDetails userDetails = findMember.convertUserDetails();
+		
+		Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
+		
+		//중복 로그인 차단
+		//서버에 저장한 JWT 토큰값 전달
+		if(isNotHaveUsernameRedis(loginRequest.getEmail()))
+		{
+			String username = findMember.getUsername();
+			IpUserDetailsToken ipUserDetailToken = (IpUserDetailsToken) customTokenProvider.findAccessToken(username,IpUserDetailsToken.class);
+
+			LoginResponse token = new LoginResponse(ipUserDetailToken.getAccessToken(),ipUserDetailToken.getRefreshToken());
+			token.setDocURL("https://app.gitbook.com/o/2Kxp9w9wD6czxO5f7Vpa/s/4c6Lnb6whYxpAx2A81Na/reference/v1.0/authentication");
+			token.setTokenType("Bearer");
+
+			return ResponseEntity.status(HttpStatus.OK).body(token);
+		}
+
+		//엑세스 토큰 생성
+		IpUserDetailsToken ipUserDetailToken = (IpUserDetailsToken) customTokenProvider.generateToken(authentication, IpUserDetailsToken.class);
+		ipUserDetailToken.setUserDetail(findMember);
+
+		//토큰 Redis 저장
+		redisService.setData(authentication.getName(), ipUserDetailToken);
+
+		//redis 오류 대비 Email, AccessKey,RefreshKey,secretKey 로 DB 저장 구현하기
+
+
+		LoginResponse token = new LoginResponse(ipUserDetailToken.getAccessToken(),ipUserDetailToken.getRefreshToken());
+		token.setDocURL("https://app.gitbook.com/o/2Kxp9w9wD6czxO5f7Vpa/s/4c6Lnb6whYxpAx2A81Na/reference/v1.0/authentication");
+		token.setTokenType("Bearer");
+		return ResponseEntity.status(HttpStatus.OK).body(token);
+	}
+
+
+	/**
+	 * 로그아웃
+	 * @param request
+	 * @return
+	 */
+	@PostMapping("/logout")
+	public ResponseEntity<?> logout(HttpServletRequest request) {
+
+		try {
+			String accessToken = getJwtFromRequest(request);
+
+			customTokenProvider.validateToken(accessToken);
+
+			String username = customTokenProvider.getUserIdFromJWT(accessToken);
+
+			//Redis에 유저 정보가 없으면 -102 에러가 발생합니다.
+			haveUsernameRedis(username);
+			//redisService.deleteData(username);
+
+			return ResponseEntity.status(HttpStatus.OK).body("-1");
+		} catch(ExpiredJwtException eje) {
+			String username = eje.getClaims().getSubject();
+
+			redisService.deleteData(username);
+
+			String code = ExceptionCode.LOGOUT_TOKEN_TIMEOUT.getCode();
+			String message = ExceptionCode.LOGOUT_TOKEN_TIMEOUT.getMessage();
+
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorCode(HttpStatus.UNAUTHORIZED, code, message));
+		} catch (UnsupportedJwtException se) {
+			se.printStackTrace();
+
+			String code = ExceptionCode.UNSUPPORTED_TOKEN.getCode();
+			String message = ExceptionCode.UNSUPPORTED_TOKEN.getMessage();
+
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorCode(HttpStatus.UNAUTHORIZED, code, message));
+		} catch (SignatureException | MalformedJwtException mje) {
+			mje.printStackTrace();
+
+			String code = ExceptionCode.WRONG_TYPE_TOKEN.getCode();
+			String message = ExceptionCode.WRONG_TYPE_TOKEN.getMessage();
+
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorCode(HttpStatus.UNAUTHORIZED, code, message));
+		}
+
+	}
+
+
+
+
 	
 	@GetMapping("/isPublicKey")
 	public ResponseEntity<?> publicKey(@RequestBody IsPublicKey publicKey){
@@ -116,63 +218,7 @@ public class AuthController {
 	}
 	
 	
-	
-	/**
-	 * 
-	 * 로그인 API 입니다. RequestBody에서 데이터를 받아 패스워드를 디코딩 후, 인증이 이루어집니다. 인증이 완료되면 엑세스 토큰과 리프레시 토큰을 발급합니다
-	 * 유저 또는 패스워드가 일치하지 않을 경우, <b>UsernameNotFoundException</b>,<b>IllegalArgumentException</b>이 발생합니다. 에러코드는 -101 입니다.
-	 * 또한 로그인한 유저가 API를 요청할 경우 IllegalStateException이 발생합니다. 에러코드는 -105 입니다.
-	 * @param loginRequest
-	 * @return ResponseEntity
-	 */
-	@PostMapping("/login")
-	public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-		
-		
-		
-		String plainPassword = decryptPassword(loginRequest.getSecret());
-		
-		loginRequest.setSecret(plainPassword);
-		
-		
-		
-		UserDetail findMember = memberService.findByEmail(loginRequest);
-		UserDetails userDetails = findMember.convertUserDetails();
-		
-		Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
-		
-		
-		//로그인 검사
-		if( isNotHaveUsernameRedis(loginRequest.getEmail())) {
-			String username = findMember.getUsername();
-			IpUserDetailsToken ipUserDetailToken = (IpUserDetailsToken) customTokenProvider.findAccessToken(username,IpUserDetailsToken.class);
-			
-			LoginResponse token = new LoginResponse(ipUserDetailToken.getAccessToken(),ipUserDetailToken.getRefreshToken());
-			token.setDocURL("https://app.gitbook.com/o/2Kxp9w9wD6czxO5f7Vpa/s/4c6Lnb6whYxpAx2A81Na/reference/v1.0/authentication");
-			token.setTokenType("Bearer");
-			
-			return ResponseEntity.status(HttpStatus.OK).body(token);
-		} else {
-			//엑세스 토큰 생성
-			IpUserDetailsToken ipUserDetailToken = (IpUserDetailsToken) customTokenProvider.generateToken(authentication, IpUserDetailsToken.class);
-			ipUserDetailToken.setUserDetail(findMember);
-			
-			//토큰 Redis 저장
-			redisService.setData(authentication.getName(), ipUserDetailToken);
-			
-			//redis 오류 대비 Email, AccessKey,RefreshKey,secretKey 로 DB 저장 구현하기
-			
-			
-			LoginResponse token = new LoginResponse(ipUserDetailToken.getAccessToken(),ipUserDetailToken.getRefreshToken());
-			token.setDocURL("https://app.gitbook.com/o/2Kxp9w9wD6czxO5f7Vpa/s/4c6Lnb6whYxpAx2A81Na/reference/v1.0/authentication");
-			token.setTokenType("Bearer");
-			return ResponseEntity.status(HttpStatus.OK).body(token);
-		}
-		
-		
-		
-		
-	}
+
 	
 	/**
 	 * 
@@ -204,52 +250,7 @@ public class AuthController {
 		return true;
 	}
 	
-	/**
-	 * 
-	 * @param request
-	 * @return
-	 */
-	@PostMapping("/logout")
-	public ResponseEntity<?> logout(HttpServletRequest request) {
-		
-		try {
-			String accessToken = getJwtFromRequest(request);
-			
-			customTokenProvider.validateToken(accessToken);
-			
-			String username = customTokenProvider.getUserIdFromJWT(accessToken);
-			
-			//Redis에 유저 정보가 없으면 -102 에러가 발생합니다.
-			haveUsernameRedis(username);
-			//redisService.deleteData(username);
-			
-			return ResponseEntity.status(HttpStatus.OK).body("-1");
-		} catch(ExpiredJwtException eje) {
-			String username = eje.getClaims().getSubject();
-			
-			redisService.deleteData(username);
-			
-			String code = ExceptionCode.LOGOUT_TOKEN_TIMEOUT.getCode();
-			String message = ExceptionCode.LOGOUT_TOKEN_TIMEOUT.getMessage();
-			
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorCode(HttpStatus.UNAUTHORIZED, code, message));
-		} catch (UnsupportedJwtException se) {
-			se.printStackTrace();
-			
-			String code = ExceptionCode.UNSUPPORTED_TOKEN.getCode();
-			String message = ExceptionCode.UNSUPPORTED_TOKEN.getMessage();
-			
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorCode(HttpStatus.UNAUTHORIZED, code, message));	
-		} catch (SignatureException | MalformedJwtException mje) {
-			mje.printStackTrace();
-			
-			String code = ExceptionCode.WRONG_TYPE_TOKEN.getCode();
-			String message = ExceptionCode.WRONG_TYPE_TOKEN.getMessage();
-			
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorCode(HttpStatus.UNAUTHORIZED, code, message));
-		} 
-		
-	}
+
 	
 	@PostMapping("/refresh") 
 	public ResponseEntity<?> createRefreshToken(HttpServletRequest request) {

@@ -37,9 +37,7 @@ public class RaidPlanController {
 	private final CalendarDetailService calendarDetailService;
 	private final RequestTime requestTime;
 	
-	
-	
-	
+
 	/**
 	 * 
 	 * @param principal

@@ -33,10 +33,16 @@ public class MemberController {
 	
 	
 	private final MemberService memberService;
-	
-	
+
+
+	/**
+	 * 회원가입
+	 * @param memberForm
+	 * @return
+	 */
 	@PostMapping("/signup")
-	public ResponseEntity<?> signup(@RequestBody MemberForm memberForm) {
+	public ResponseEntity<?> signupMemberV1(@RequestBody MemberForm memberForm) {
+		//
 		Long saveId = memberService.saveMember(memberForm);
 		
 		SuccessCode successCode = new SuccessCode();
@@ -48,30 +54,31 @@ public class MemberController {
 		
 		return ResponseEntity.status(HttpStatus.OK).body(successCode);
 	}
-	
-	
-	
-	
-	
-	
+
+	/**
+	 * 유저 정보 변경
+	 * @param principal
+	 * @return
+	 */
 	@PutMapping("/update")
 	public ResponseEntity<?> updateMember(Principal principal) {
+		String id= principal.getName();
 		
 		return null;
 	}
-	
-	
-	
-	
-	
+
+
+	/**
+	 * 유저 삭제
+	 * @return
+	 */
 	@PostMapping("/delete")
 	public ResponseEntity<?> deletMember() {
 		
 		return null;
 	}
-	
-	
-	
+
+
 	@ExceptionHandler(IllegalStateException.class)
 	public ResponseEntity<ErrorCode> handleIllegalStateException(IllegalStateException exception) {
 		//https://mangkyu.tistory.com/204

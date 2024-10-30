@@ -1,20 +1,14 @@
 package com.guild.calendar.entity;
 
-
-import javax.persistence.Column;
-
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.*;
 
 import com.guild.calendar.entity.base.BaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter @Setter @ToString
@@ -27,50 +21,10 @@ public class Calendar extends BaseEntity {
 	@Column(nullable = false)
 	private String subject;
 
+	private Member member; //소유자 정보
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "member_id")
-	private Member member;
+	private List<CalendarDetail> calendarDetailList = new ArrayList<>();
 
-
-	private String shareUser;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name="guild_id")
-	private Guild guild;
-
-	//해당 데이터의 생성자 또는 소유자 ID
-	private String owner;
-
-	public Calendar() {}
-	public Calendar(Builder builder) {
-		this.subject = builder.subject;
-		this.shareUser = builder.shareUser;
-		this.member = builder.member;
-		this.guild = builder.guild;
-	}
-
-	public static class Builder {
-		private String subject;
-		private Member member;
-		private String shareUser;
-		private Guild guild;
-
-		public Builder subject(String subject) {this.subject = subject; return this;}
-		public Builder member(Member member) {this.member = member; return this;}
-		public Builder shareUser(String shareUser) {this.shareUser = shareUser; return this;}
-
-		/**
-		 * 인증 완료 후 길드
-		 * @param guildName
-		 * @return
-		 */
-		public Builder guild(Guild guild) {this.guild = guild; return this;}
-		public Calendar build() {return new Calendar(this);};
-	}
-
-
-
-
+	private Guild guild; //소유 길드?
 }
 

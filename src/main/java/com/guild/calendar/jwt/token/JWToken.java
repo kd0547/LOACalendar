@@ -1,11 +1,13 @@
 package com.guild.calendar.jwt.token;
 
 
+import lombok.Getter;
 
+@Getter
 public class JWToken {
 	
-	private String accessToken;
-	private String refreshToken;
+	private String accessToken; //인증토큰
+	private String refreshToken; //인증토큰 발급용
 	private String key;
 	
 	public JWToken(){}
@@ -14,19 +16,4 @@ public class JWToken {
 		this.refreshToken = refreshToken;
 		this.key = key;
 	}
-
-	public String getAccessToken() {
-		return accessToken;
-	}
-
-	public String getRefreshToken() {
-		return refreshToken;
-	}
-
-	public String getKey() {
-		return key;
-	}
-	
-	
-	
 }

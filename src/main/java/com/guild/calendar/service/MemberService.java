@@ -1,5 +1,6 @@
 package com.guild.calendar.service;
 
+import com.guild.calendar.security.RSAEncryption;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,13 +22,12 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class MemberService implements UserDetailsService{
 
-	@Autowired
 	private final MemberRepository memberRepository;
-	
-	@Autowired
 	private final PasswordEncoder passwordEncoder;
-	
-	
+
+	private final RSAEncryption rsaEncryption;
+
+
 	@Override
 	public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 		
@@ -44,7 +44,40 @@ public class MemberService implements UserDetailsService{
 					.roles(member.getRole().toString())
 					.build();
 	}
-	
+
+
+	/**
+	 *
+	 * @param loginRequest
+	 * @return
+	 */
+	public UserDetail login(LoginRequest loginRequest) {
+
+		Member member = memberRepository.findByEmail(loginRequest.getEmail());
+
+		if(member == null) {
+			throw new UsernameNotFoundException("-101");
+		}
+
+		String rawPassword = loginRequest.getSecret();
+
+		if(!passwordEncoder.matches(rawPassword,member.getPassword())) {
+			throw new IllegalArgumentException("-101");
+		}
+
+
+		return UserDetail.builder()
+				.username(member.getEmail())
+				.password(member.getPassword())
+				.role(member.getRole().toString())
+				.build();
+	}
+
+	/**
+	 *
+	 * @param loginRequest
+	 * @return
+	 */
 	public UserDetail findByEmail(LoginRequest loginRequest) {
 		
 		Member member = memberRepository.findByEmail(loginRequest.getEmail());

@@ -9,17 +9,13 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-@Getter
-@Setter
-@ToString
+@ToString @Setter @Getter
 public class UserDetail {
+
 	private String username;
 	private String password;
 	private String role;
-	
-	
-	
-	
+
 	public static class Builder {
 		private String username;
 		private String password;

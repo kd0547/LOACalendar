@@ -12,18 +12,14 @@ import org.springframework.data.redis.cache.RedisCacheManager.RedisCacheManagerB
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-
-import io.lettuce.core.support.caching.RedisCache;
-
-
-
-
-
 
 @Configuration
 public class RedisConfig {
+	/*
+		Readis 환경설정
+	
+	 */
 	
 	@Value("${spring.redis.host}")
 	private String host;

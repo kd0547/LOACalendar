@@ -66,10 +66,15 @@ public class SecurityConfig {
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
         .formLogin().disable().headers().frameOptions().disable();
 		;
-		
-		
-		
-		http.addFilterBefore(new JwtAuthenticationFilter(jwTokenProvider()),UsernamePasswordAuthenticationFilter.class);
+
+
+		/**
+		 * JWT 토큰
+		 */
+		http.addFilterBefore(
+				new JwtAuthenticationFilter(
+						jwTokenProvider()),
+				UsernamePasswordAuthenticationFilter.class);
 		
 		
 		

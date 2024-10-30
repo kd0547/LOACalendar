@@ -8,17 +8,13 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.guild.calendar.Exception.ExceptionCode;
-import com.guild.calendar.dto.UserDetail;
 import com.guild.calendar.jwt.token.IpUserDetailsToken;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -27,8 +23,7 @@ import io.jsonwebtoken.security.SignatureException;
 
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter{
-	
-	
+
 	private final CustomTokenProvider customTokenProvider;
 	
 	public JwtAuthenticationFilter(CustomTokenProvider customTokenProvider) {
@@ -41,11 +36,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 			throws ServletException, IOException {
 		
 		try {
-			String accessToken = getJwtFromRequest(request);
-			
+			String accessToken = findJwtFromRequest(request);
+			//토큰의 유효성 검사
 			customTokenProvider.validateToken(accessToken);
-			
-			
+
 			String username = customTokenProvider.getUserIdFromJWT(accessToken);
 			
 			//redis에서 유저 데이터를 조회한다.
@@ -54,7 +48,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 			
 			UserDetails userDetails =  findIpUserDetailsToken.getUserDetail().convertUserDetails();
 			Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
-			
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 			
 		} catch (NullPointerException ne) {
@@ -86,16 +79,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 			//e.printStackTrace();
 			
 		}
-		
-		
-		
-		
+
 		filterChain.doFilter(request, response);
 	}
 	
 	
 	
-	private String getJwtFromRequest(HttpServletRequest request) {
+	private String findJwtFromRequest(HttpServletRequest request) {
 		String bearerToken = request.getHeader("Authorization");
 		
 		if(bearerToken == null) {

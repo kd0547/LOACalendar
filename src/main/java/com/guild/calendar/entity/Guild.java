@@ -1,8 +1,5 @@
 package com.guild.calendar.entity;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -13,11 +10,11 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 
 import com.guild.calendar.constant.DiscordAuth;
-import com.guild.calendar.dto.GuildForm;
+import com.guild.calendar.dto.GuildFormDto;
 
+import com.guild.calendar.entity.base.BaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -26,7 +23,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @Entity
-public class Guild extends BaseEntity{
+public class Guild extends BaseEntity {
 	
 	@Id @GeneratedValue(strategy = GenerationType.AUTO, generator = "Guild_SEQ_GENERATOR")
 	@Column(name = "guild_id")
@@ -56,8 +53,8 @@ public class Guild extends BaseEntity{
 		
 		return guild;
 	}
-	public void updateGuild(GuildForm guildForm) {
-		this.guildName = guildForm.getGuildName();
+	public void updateGuild(GuildFormDto guildFormDto) {
+		this.guildName = guildFormDto.getGuildName();
 		
 		
 	}

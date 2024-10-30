@@ -5,11 +5,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import javax.validation.constraints.NotNull;
 
 @Data
-@ToString @Getter @Setter
 public class LoginRequest {
 
-	private String email;
-	private String secret;
+	@NotNull
+	private String email; //이메일
+	private String secret; //비밀번호
 }

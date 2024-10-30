@@ -39,7 +39,7 @@ public class RaidPlanController {
 	
 
 	/**
-	 * 
+	 * 레이드 계획 조회
 	 * @param principal
 	 * @param planId
 	 * @param calendarId
@@ -55,7 +55,7 @@ public class RaidPlanController {
 	}
 	
 	/**
-	 * 레이드 계획을 생성합니다. 
+	 * 레이드 계획 생성
 	 * @param principal
 	 * @param calendarId
 	 * @param planRequestDto
@@ -74,12 +74,14 @@ public class RaidPlanController {
 	
 	
 	@PatchMapping("/{planId}/calendar/{calendarId}")
-	public ResponseEntity<?> patchUpdateRaidPlan(Principal principal,@PathVariable Long planId,@PathVariable Long calendarId,@RequestBody RaidPlanRequestDto planRequestDto) {
+	public ResponseEntity<?> patchUpdateRaidPlan(
+			Principal principal,
+			@PathVariable Long planId,
+			@PathVariable Long calendarId,
+			@RequestBody RaidPlanRequestDto planRequestDto) {
+
 		String username = principal.getName();
-		
 		Long patchId = calendarDetailService.updateRaidPlanGuildUser(username,planId,calendarId,planRequestDto);
-		
-		
 		return ResponseEntity.status(HttpStatus.ACCEPTED).body(new SuccessCode(HttpStatus.ACCEPTED.value(), patchId));
 	}
 	

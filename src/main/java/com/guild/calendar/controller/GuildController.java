@@ -3,12 +3,9 @@ package com.guild.calendar.controller;
 import java.security.Principal;
 import java.util.List;
 
-import javax.persistence.EntityNotFoundException;
-
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,13 +14,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.guild.calendar.Exception.ExceptionCode;
 import com.guild.calendar.dto.ErrorCode;
-import com.guild.calendar.dto.GuildForm;
+import com.guild.calendar.dto.GuildFormDto;
 import com.guild.calendar.dto.GuildUserDto;
 import com.guild.calendar.dto.ResponseGuildUserDto;
 import com.guild.calendar.dto.SuccessCode;
@@ -48,7 +43,7 @@ public class GuildController {
 	public ResponseEntity<?> viewGuild(Principal principal) {
 		String username = principal.getName();
 		
-		List<GuildForm> findGuild = guildService.findAllGuild(username);
+		List<GuildFormDto> findGuild = guildService.findAllGuild(username);
 		
 	
 		
@@ -58,35 +53,37 @@ public class GuildController {
 	
 	
 	/**
-	 * 길드를 생성합니다. 
+	 * 길드 생성
 	 * @param principal
-	 * @param guildForm
+	 * @param guildFormDto
 	 * @return
 	 */
 	@PostMapping
-	public ResponseEntity<?> createGuild(Principal principal,@RequestBody GuildForm guildForm) {
+	public ResponseEntity<?> createGuild(Principal principal,@RequestBody GuildFormDto guildFormDto) {
 		String username = principal.getName();
-		guildForm.setGuildOwner(username);
+		guildFormDto.setGuildOwner(username);
 		
-		Long saveId= guildService.saveGuild(guildForm);
+		Long saveId= guildService.saveGuild(guildFormDto);
 		
 		return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessCode(HttpStatus.CREATED.value(), saveId));
 	}
 	
 	/**
 	 * 
-	 * 길드를 수정합니다. 
+	 * 길드 정보 수정
 	 * 
 	 * @param principal
 	 * @param guildId
-	 * @param guildForm
+	 * @param guildFormDto
 	 * @return
 	 */
-	@PutMapping("/{guildId}")
-	public  ResponseEntity<?> updateGuild(Principal principal,@PathVariable Long guildId,@RequestBody GuildForm guildForm) {
+	@PutMapping("/update/{guildId}")
+	public  ResponseEntity<?> updateGuild(
+			Principal principal,
+			@PathVariable Long guildId,
+			@RequestBody GuildFormDto guildFormDto) {
 		String username = principal.getName();
-		
-		guildService.updateGuild(username,guildId,guildForm);
+		guildService.updateGuild(username,guildId, guildFormDto);
 		
 		
 		return ResponseEntity.status(HttpStatus.ACCEPTED).body(new SuccessCode(HttpStatus.ACCEPTED.value(),guildId));
@@ -108,6 +105,8 @@ public class GuildController {
 		return ResponseEntity.status(HttpStatus.ACCEPTED).body(new SuccessCode(HttpStatus.ACCEPTED.value(),guildId,"삭제 완료"));
 
 	}
+
+
 	/**
 	 * 길드 유저를 조회합니다.
 	 * 
@@ -138,13 +137,7 @@ public class GuildController {
 	@PostMapping("/{guildId}/guild-user")
 	public ResponseEntity<?> createGuildUser(Principal principal,@PathVariable Long guildId,@RequestBody GuildUserDto guildUserDto) {
 		String username = principal.getName();
-		
-		
-		
-		
 		Long saveId = guildService.saveGuildUser(username,guildId,guildUserDto);
-		
-		
 		return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessCode(HttpStatus.CREATED.value(), saveId));
 	}
 	

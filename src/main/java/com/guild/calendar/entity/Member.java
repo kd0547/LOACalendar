@@ -1,16 +1,12 @@
 package com.guild.calendar.entity;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
 
+import com.guild.calendar.entity.base.BaseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.guild.calendar.constant.Role;
@@ -24,7 +20,7 @@ import lombok.ToString;
 @Setter
 @ToString
 @Entity
-public class Member extends BaseEntity{
+public class Member extends BaseEntity {
 	
 	@Id @GeneratedValue(strategy = GenerationType.AUTO, generator = "member_SEQ_GENERATOR")
 	@Column(name = "member_id")

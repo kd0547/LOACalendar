@@ -9,13 +9,10 @@ import lombok.ToString;
 @ToString
 @Getter
 @Setter
-public class GuildForm {
+public class GuildFormDto {
 	
 	private Long id;
-	
 	private String guildName;
-	
 	private String guildOwner;
-	
 	private DiscordAuth Auth;
 }

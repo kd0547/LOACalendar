@@ -9,25 +9,22 @@ import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties.Jwt;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
+
 import org.springframework.stereotype.Controller;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+
 
 import com.guild.calendar.Exception.ExceptionCode;
 import com.guild.calendar.dto.ErrorCode;
@@ -36,12 +33,11 @@ import com.guild.calendar.dto.LoginEncryption;
 import com.guild.calendar.dto.LoginRequest;
 import com.guild.calendar.dto.LoginResponse;
 import com.guild.calendar.dto.MemberForm;
-import com.guild.calendar.dto.SignupRequest;
 import com.guild.calendar.dto.SuccessCode;
 import com.guild.calendar.dto.UserDetail;
-import com.guild.calendar.entity.Member;
+
 import com.guild.calendar.jwt.CustomTokenProvider;
-import com.guild.calendar.jwt.JwtTokenProvider;
+
 import com.guild.calendar.jwt.token.IpUserDetailsToken;
 import com.guild.calendar.redis.RedisService;
 import com.guild.calendar.security.RSAEncryption;
@@ -66,31 +62,91 @@ public class AuthController {
 
 
 
+	@GetMapping("/publicKey")
+	public ResponseEntity<?> publicKey(@RequestBody IsPublicKey publicKey){
 
+		String IsPublicKey = publicKey.getPublicKey();
+		byte[] publicKeyByte  = keyPair.getPublic().getEncoded();
+		String stringPublicKey = Base64.getEncoder().encodeToString(publicKeyByte);
+
+
+		if(stringPublicKey.equals(IsPublicKey)) {
+			//return ResponseEntity.status(HttpStatus.OK).body(new SuccessCode(HttpStatus.OK.value(), 0L, "사용할 수 있는 publicKey 입니다."));
+			return ResponseEntity.status(HttpStatus.OK).body("");
+		}
+
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).body("");
+	}
 
 	/**
-	 *
-	 * 로그인 API 입니다. RequestBody에서 데이터를 받아 패스워드를 디코딩 후, 인증이 이루어집니다. 인증이 완료되면 엑세스 토큰과 리프레시 토큰을 발급합니다
-	 * 유저 또는 패스워드가 일치하지 않을 경우, <b>UsernameNotFoundException</b>,<b>IllegalArgumentException</b>이 발생합니다. 에러코드는 -101 입니다.
-	 * 또한 로그인한 유저가 API를 요청할 경우 IllegalStateException이 발생합니다. 에러코드는 -105 입니다.
+	 * 로그인
 	 * @param loginRequest
 	 * @return ResponseEntity
 	 */
 	@PostMapping("/signin")
-	public ResponseEntity<?> login(
-			@RequestBody @Validated
+	public ResponseEntity<?> httpLogin(
+			@RequestBody
 			LoginRequest loginRequest) {
 
-		//패스워드 암호화
+		//패스워드 복호화
 		String plainPassword = decryptPassword(loginRequest.getSecret());
 		loginRequest.setSecret(plainPassword);
 
-		UserDetail findMember = memberService.findByEmail(loginRequest);
-
+		//사용자 조회
+		UserDetail findMember = memberService.login(loginRequest);
 		UserDetails userDetails = findMember.convertUserDetails();
+
 		
 		Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
 		
+		//중복 로그인 차단
+		//서버에 저장한 JWT 토큰값 전달
+		if(isNotHaveUsernameRedis(loginRequest.getEmail()))
+		{
+			String username = findMember.getUsername();
+			IpUserDetailsToken ipUserDetailToken = (IpUserDetailsToken) customTokenProvider.findAccessToken(username,IpUserDetailsToken.class);
+
+			LoginResponse token = new LoginResponse(ipUserDetailToken.getAccessToken(),ipUserDetailToken.getRefreshToken());
+			token.setDocURL("https://app.gitbook.com/o/2Kxp9w9wD6czxO5f7Vpa/s/4c6Lnb6whYxpAx2A81Na/reference/v1.0/authentication");
+			token.setTokenType("Bearer");
+
+			return ResponseEntity.status(HttpStatus.OK).body(token);
+		}
+
+		//엑세스 토큰 생성
+		IpUserDetailsToken ipUserDetailToken = (IpUserDetailsToken) customTokenProvider.generateToken(authentication, IpUserDetailsToken.class);
+		ipUserDetailToken.setUserDetail(findMember);
+
+		//토큰 Redis 저장
+		redisService.setData(authentication.getName(), ipUserDetailToken);
+
+		//redis 오류 대비 Email, AccessKey,RefreshKey,secretKey 로 DB 저장 구현하기
+
+
+		LoginResponse token = new LoginResponse(ipUserDetailToken.getAccessToken(),ipUserDetailToken.getRefreshToken());
+		token.setDocURL("https://app.gitbook.com/o/2Kxp9w9wD6czxO5f7Vpa/s/4c6Lnb6whYxpAx2A81Na/reference/v1.0/authentication");
+		token.setTokenType("Bearer");
+		return ResponseEntity.status(HttpStatus.OK).body(token);
+	}
+
+	/**
+	 * https 로그인 
+	 * 패스워드는 평문 상태로 요청
+	 * @param loginRequest
+	 * @return ResponseEntity
+	 */
+	@PostMapping("/signin")
+	public ResponseEntity<?> httpsLogin(
+			@RequestBody
+			LoginRequest loginRequest) {
+		
+		//사용자 조회
+		UserDetail findMember = memberService.login(loginRequest);
+		UserDetails userDetails = findMember.convertUserDetails();
+
+		//인증토큰 생성
+		Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
+
 		//중복 로그인 차단
 		//서버에 저장한 JWT 토큰값 전달
 		if(isNotHaveUsernameRedis(loginRequest.getEmail()))
@@ -173,21 +229,7 @@ public class AuthController {
 
 
 	
-	@GetMapping("/isPublicKey")
-	public ResponseEntity<?> publicKey(@RequestBody IsPublicKey publicKey){
-		
-		String IsPublicKey = publicKey.getPublicKey();
-		byte[] publicKeyByte  = keyPair.getPublic().getEncoded();
-		String stringPublicKey = Base64.getEncoder().encodeToString(publicKeyByte);
-		
-		
-		if(stringPublicKey.equals(IsPublicKey)) {
-			//return ResponseEntity.status(HttpStatus.OK).body(new SuccessCode(HttpStatus.OK.value(), 0L, "사용할 수 있는 publicKey 입니다."));
-			return ResponseEntity.status(HttpStatus.OK).body("");
-		}
-	
-		return ResponseEntity.status(HttpStatus.NO_CONTENT).body("");
-	}
+
 	
 	@GetMapping("/encrypt") 
 	public ResponseEntity<?> loginencrypt(){

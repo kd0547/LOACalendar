@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.crypto.SecretKey;
 
+import lombok.Getter;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.guild.calendar.dto.UserDetail;
@@ -12,6 +13,7 @@ import com.guild.calendar.dto.UserDetail;
 import lombok.ToString;
 
 
+@Getter
 public class IpUserDetailsToken extends UserDetailsToken{
 	
 	
@@ -39,10 +41,7 @@ public class IpUserDetailsToken extends UserDetailsToken{
 		}
 		return false;
 	}
-	public List<String> getIpAdressList() {
-		return ipAdressList;
-	}
-	
+
 	public void setIpAdressList(List<String> ipAdressList) {
 		this.ipAdressList = ipAdressList;
 	}

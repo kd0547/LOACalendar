@@ -1,4 +1,4 @@
-package com.guild.calendar.entity;
+package com.guild.calendar.entity.base;
 
 import java.time.LocalDateTime;
 

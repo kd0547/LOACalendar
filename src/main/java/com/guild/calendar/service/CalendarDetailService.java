@@ -246,41 +246,53 @@ public class CalendarDetailService {
 	}
 
 	/**
-	 * 
-	 * 
+	 * 레이드 계획 조회
 	 * @param username
 	 * @param planId
 	 * @param calendarId
 	 * @return
 	 */
 	public RaidPlanResponseDto findRaidPlan(String username, Long planId, Long calendarId) {
-		//Calendar calendar = calendarRepository.findByMemberIdAndcalendarId(username, calendarId);
+
+		//캘린더에서 레이드 계획을 조회
 		Optional<Calendar> findOptional = calendarRepository.findById(calendarId);
 		Calendar calendar = findOptional.get();
 		
 		if(!calendar.getOwner().equals(username)) {
 			throw new IllegalArgumentException("-210");
 		}
-		RaidPlan raidPlan = raidPlanRepository.findByIdAndCalendar(planId,calendar.getId());
-		List<CalendarDetail> calendarDetails = calendarDetailRepository.findAllByRaidPlanAndCalendar(planId, calendarId);
+
+		RaidPlan raidPlan = raidPlanRepository
+				.findByIdAndCalendar(planId,calendar.getId());
+
+		List<CalendarDetail> calendarDetails = calendarDetailRepository
+				.findAllByRaidPlanAndCalendar(planId, calendarId);
 		
-		RaidPlanResponseDto raidPlanResponseDto = new RaidPlanResponseDto();
-		raidPlanResponseDto.setRaidPlan(raidPlan);
-			
-		for(CalendarDetail calendarDetail : calendarDetails) {
-			GuildUser guildUser = calendarDetail.getGuildUser();
-			GuildUserDto guildUserDto = GuildUserDto.createGuildUserDto(guildUser);
-			raidPlanResponseDto.addGuildUser(guildUserDto);
-		}
+		RaidPlanResponseDto raidPlanResponseDto =
+				new RaidPlanResponseDto();
+
+		List<GuildUserDto> guildUserDtos =
+				calendarDetails.stream().map(calendarDetail -> {
+					GuildUser guildUser = calendarDetail.getGuildUser();
+					return GuildUserDto.createGuildUserDto(guildUser);
+		}).toList();
+		raidPlanResponseDto.setGuildUser(guildUserDtos);
+
+
 
 		return raidPlanResponseDto;
 	}
 
+	/**
+	 * 레이드 삭제가 왜 여기 있음?
+	 * @param username
+	 * @param planId
+	 * @param calendarId
+	 */
 	public void deleteRaidPlan(String username, Long planId, Long calendarId) {
 		Optional<RaidPlan> findOptional = raidPlanRepository.findById(planId);
 		RaidPlan findRaidPlan = findOptional.get();
-		
-		
+
 		/*
 		 *	요청값과 DB 값을 비교
 		 */
@@ -313,16 +325,12 @@ public class CalendarDetailService {
 		
 		LocalDate firstDate = requestYearMonth.withDayOfMonth(1);
 		LocalDate lastDate = requestYearMonth.withDayOfMonth(requestYearMonth.lengthOfMonth());
-		
-		
-		
+
 		List<CalendarDetail> calendarDetails = calendarDetailRepository.findAllByCalendarIdBetweenDate(calendarId,firstDate,lastDate);
 		List<RaidPlanDto> raidPlanDtos = new ArrayList<RaidPlanDto>();
 		CalendarDetailsDto calendarDetailsDto = new CalendarDetailsDto();
 		RaidPlan raidPlan = new RaidPlan();
-		
-		
-		
+
 		for(CalendarDetail calendarDetail : calendarDetails) {
 	
 			if(raidPlan.getId() == calendarDetail.getRaidPlan().getId()) {

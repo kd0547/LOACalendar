@@ -1,10 +1,10 @@
 package com.guild.calendar.jwt.token;
 
-
-
 import com.guild.calendar.dto.UserDetail;
+import lombok.Getter;
 
 
+@Getter
 public class UserDetailsToken extends JWToken{
 
 	private UserDetail userDetail;
@@ -14,8 +14,6 @@ public class UserDetailsToken extends JWToken{
 		super();
 	}
 	public UserDetailsToken(String accessToken, String refreshToken, String key) {
-		
-		
 		this(null,accessToken,refreshToken,key);
 	}
 	
@@ -25,16 +23,5 @@ public class UserDetailsToken extends JWToken{
 		this.userDetail = userDetail;
 		
 	}
-
-	public UserDetail getUserDetail() {
-		return userDetail;
-	}
-
-	public void setUserDetail(UserDetail userDetail) {
-		this.userDetail = userDetail;
-	}
-
-	
-	
 
 }

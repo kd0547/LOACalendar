@@ -3,7 +3,6 @@ package com.guild.calendar.entity;
 
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import javax.persistence.Column;
@@ -21,6 +20,7 @@ import javax.persistence.ManyToOne;
 import com.guild.calendar.constant.LegionRaid;
 import com.guild.calendar.dto.RaidPlanRequestDto;
 
+import com.guild.calendar.entity.base.BaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -29,7 +29,7 @@ import lombok.ToString;
 @ToString
 @Getter
 @Setter
-public class RaidPlan extends BaseEntity{
+public class RaidPlan extends BaseEntity {
 	@Id @GeneratedValue(strategy = GenerationType.AUTO,generator = "RaidPlan_SEQ_GENERATOR")
 	@Column(name = "raid_plan")
 	private Long id;

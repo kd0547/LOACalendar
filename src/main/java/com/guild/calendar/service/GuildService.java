@@ -4,15 +4,11 @@ import java.util.ArrayList;
 
 import java.util.List;
 
-import javax.persistence.EntityNotFoundException;
-
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.guild.calendar.Exception.DeleteFailedException;
-import com.guild.calendar.dto.GuildForm;
+import com.guild.calendar.dto.GuildFormDto;
 import com.guild.calendar.dto.GuildUserDto;
 import com.guild.calendar.dto.ResponseGuildUserDto;
 import com.guild.calendar.entity.Guild;
@@ -32,16 +28,16 @@ public class GuildService {
 	private final MemberRepository memberRepository;
 	private final GuildUserRepository guildUserRepository;
 	
-	public Long saveGuild(GuildForm guildForm) {
-		Member member = memberRepository.findByEmail(guildForm.getGuildOwner());
-		Guild findGuild = guildRepository.findByMemberAndGuildName(member,guildForm.getGuildName());
+	public Long saveGuild(GuildFormDto guildFormDto) {
+		Member member = memberRepository.findByEmail(guildFormDto.getGuildOwner());
+		Guild findGuild = guildRepository.findByMemberAndGuildName(member, guildFormDto.getGuildName());
 		
 		if(findGuild != null) {
 		
 			throw new DuplicateKeyException("중복된 길드명은 사용할 수 없습니다.");
 		}
 		
-		Guild guild = Guild.createGuild(member,guildForm.getGuildOwner(),guildForm.getGuildName());
+		Guild guild = Guild.createGuild(member, guildFormDto.getGuildOwner(), guildFormDto.getGuildName());
 		Guild saveGuild = guildRepository.save(guild);
 		
 		return saveGuild.getId();
@@ -52,11 +48,11 @@ public class GuildService {
 	 * 길드를 수정합니다. 중복으로 길드명을 수정할 수 없습니다.
 	 * @param username
 	 * @param guildId
-	 * @param guildForm
+	 * @param guildFormDto
 	 */
 	@Transactional
-	public void updateGuild(String username,Long guildId ,GuildForm guildForm) {
-		String isDuplicateGuildName = guildForm.getGuildName();
+	public void updateGuild(String username, Long guildId , GuildFormDto guildFormDto) {
+		String isDuplicateGuildName = guildFormDto.getGuildName();
 		
 		Guild guild = guildRepository.findByGuildOwnerAndId(username,guildId);
 		if(guild == null) {
@@ -69,7 +65,7 @@ public class GuildService {
 		}
 		
 		String originalGuildName = guild.getGuildName();
-		guild.setGuildName(guildForm.getGuildName());
+		guild.setGuildName(guildFormDto.getGuildName());
 		
 		/*
 		 * 2023-01-18 추가 
@@ -106,25 +102,25 @@ public class GuildService {
 	
 	
 
-	public List<GuildForm> findAllGuild(String username) {
-		List<GuildForm> guildForms = new ArrayList<GuildForm>();
+	public List<GuildFormDto> findAllGuild(String username) {
+		List<GuildFormDto> guildFormDtos = new ArrayList<GuildFormDto>();
 		
 		List<Guild> guilds = guildRepository.findAllByGuildOwner(username);
 		
 		for(Guild guild : guilds) {
-			GuildForm guildForm = new GuildForm();
-			guildForm.setId(guild.getId());
-			guildForm.setGuildName(guild.getGuildName());
+			GuildFormDto guildFormDto = new GuildFormDto();
+			guildFormDto.setId(guild.getId());
+			guildFormDto.setGuildName(guild.getGuildName());
 			//나중에 닉네임이 생기면 아이디 대신 닉네임 저장 
 			//guildForm.setGuildOwner(guild.getGuildOwner());
-			guildForm.setAuth(guild.getDiscodeAuth());
+			guildFormDto.setAuth(guild.getDiscodeAuth());
 			
-			guildForms.add(guildForm);
+			guildFormDtos.add(guildFormDto);
 			
 		}
 		
 		
-		return guildForms;
+		return guildFormDtos;
 	}
 
 

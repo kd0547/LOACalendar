@@ -16,6 +16,7 @@ import javax.persistence.ManyToOne;
 import com.guild.calendar.constant.LoaClass;
 import com.guild.calendar.dto.GuildUserDto;
 
+import com.guild.calendar.entity.base.BaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;

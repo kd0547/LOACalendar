@@ -2,16 +2,7 @@ package com.guild.calendar.entity;
 
 
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 
 import com.guild.calendar.constant.LoaClass;
 
@@ -28,12 +19,12 @@ public class GuildUser extends BaseEntity {
 	@Column(name = "guild_user_id")
 	private Long id;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "guild_id")
 	private Guild guild;
 	
-	private String memberEmail;
-	
-	private String guildName;
-	
+	private String guildUserEmail;
+
 	@Enumerated(EnumType.STRING)
 	private LoaClass loaClass; 
 	

@@ -12,6 +12,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Getter @Setter @ToString
 public class Member extends BaseEntity {
@@ -33,6 +36,12 @@ public class Member extends BaseEntity {
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private Role role = Role.USER;
+
+	@OneToMany(mappedBy = "member")
+	private List<Calendar> calendars = new ArrayList<>();
+
+	@OneToMany(mappedBy = "member")
+	private List<Guild> guilds = new ArrayList<>();
 
 	@Column(nullable = false)
 	private Boolean isActive = true;	//계정 활성화

@@ -21,10 +21,11 @@ public class Calendar extends BaseEntity {
 	@Column(nullable = false)
 	private String subject;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "member_id")
 	private Member member; //소유자 정보
 
-	private List<CalendarDetail> calendarDetailList = new ArrayList<>();
-
-	private Guild guild; //소유 길드?
+	@OneToMany(mappedBy = "calendar",fetch = FetchType.LAZY)
+	private List<RaidPlan> raidPlans = new ArrayList<>();
 }
 

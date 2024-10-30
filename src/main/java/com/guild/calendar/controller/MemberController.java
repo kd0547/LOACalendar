@@ -20,6 +20,7 @@ public class MemberController {
     private MemberService memberService;
 
 
+    //회원가입
     @PostMapping("/member/sign-in")
     public ResponseEntity<Object> createMember(@RequestBody SigninDTO signinDTO) {
         Long id = memberService.join(signinDTO);
@@ -31,5 +32,11 @@ public class MemberController {
                 .status(HttpStatus.OK)
                 .body(responseMap);
     }
+
+    //회원수정
+
+    //회원삭제
+
+
 
 }

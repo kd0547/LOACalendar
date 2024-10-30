@@ -21,10 +21,11 @@ public class Guild extends BaseEntity {
 
 	private String guildName;
 
-
+	@OneToMany(mappedBy = "guild")
 	private List<GuildUser> guildUsers = new ArrayList<>();
 
-
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "member_id")
 	private Member member;
 
 	@Enumerated(EnumType.STRING)

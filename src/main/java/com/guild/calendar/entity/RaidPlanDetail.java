@@ -1,8 +1,6 @@
 package com.guild.calendar.entity;
 
 
-import java.time.LocalDate;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -17,28 +15,20 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-/*
-@TableGenerator(
-		name = "RaidPlanGuildUser_SEQ_GENERATOR",
-		table = "raid_plan_guild_user_seq_table",
-		pkColumnName = "RaidPlanGuildUser_SEQ",
-		valueColumnName = "next_val",
-		initialValue = 1,
-		allocationSize = 20
-		)
-*/
 @Entity
 @Getter @Setter @ToString
-public class CalendarDetail extends BaseEntity {
+public class RaidPlanDetail extends BaseEntity {
 
 	@Id @GeneratedValue(strategy = GenerationType.AUTO, generator = "calendar_detail_GENERATOR")
 	@Column(name = "calendar_detail_id")
 	private Long id;
-	
-	private Calendar calendar;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "raid_plan_id")
 	private RaidPlan raidPlan;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "guild_user_id")
 	private GuildUser guildUser;
 
 }

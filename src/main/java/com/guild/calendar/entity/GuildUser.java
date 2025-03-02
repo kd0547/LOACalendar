@@ -15,7 +15,7 @@ import lombok.ToString;
 @Setter @Getter @ToString
 public class GuildUser extends BaseEntity {
 	
-	@Id @GeneratedValue(strategy = GenerationType.AUTO, generator = "GuildUser_SEQ_GENERATOR")
+	@Id @GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "guild_user_id")
 	private Long id;
 

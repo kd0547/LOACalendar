@@ -1,11 +1,9 @@
 package com.guild.calendar.repository;
 
 import com.guild.calendar.entity.Member;
-import com.guild.calendar.exception.EmailDuplicateException;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 @RequiredArgsConstructor

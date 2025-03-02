@@ -20,7 +20,7 @@ import lombok.ToString;
 @Entity
 @ToString @Getter @Setter
 public class RaidPlan extends BaseEntity {
-	@Id @GeneratedValue(strategy = GenerationType.AUTO,generator = "RaidPlan_SEQ_GENERATOR")
+	@Id @GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "raid_plan_id")
 	private Long id;
 

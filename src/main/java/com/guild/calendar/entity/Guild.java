@@ -11,22 +11,24 @@ import lombok.ToString;
 import java.util.ArrayList;
 import java.util.List;
 
-@ToString @Getter @Setter
 @Entity
+@ToString @Getter @Setter
 public class Guild extends BaseEntity {
 
-	@Id @GeneratedValue(strategy = GenerationType.AUTO, generator = "Guild_SEQ_GENERATOR")
+	@Id @GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "guild_id")
 	private Long id;
 
 	private String guildName;
+
+	private String guildDescription;
 
 	@OneToMany(mappedBy = "guild")
 	private List<GuildUser> guildUsers = new ArrayList<>();
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "member_id")
-	private Member member;
+	private Member member; //소유자
 
 	@Enumerated(EnumType.STRING)
 	private DiscordAuth discodeAuth; //인증 여부

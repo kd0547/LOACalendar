@@ -15,11 +15,13 @@ import java.util.List;
 public class Calendar extends BaseEntity {
 
 	@Column(name = "calendar_id")
-	@Id @GeneratedValue(strategy = GenerationType.AUTO, generator = "Calendar_SEQ_GENERATOR")
+	@Id @GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
 	@Column(nullable = false)
 	private String subject;
+
+	private String description;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "member_id")

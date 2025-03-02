@@ -1,16 +1,14 @@
 package com.guild.calendar.dto;
 
-import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
+import jakarta.validation.constraints.NotEmpty;
+
 
 @Data
-public class SigninDTO {
+public class LoginDto {
 
     @NotEmpty
     private String email;
-
-    @NotEmpty
-    private String username;
 
     @NotEmpty
     private String password;

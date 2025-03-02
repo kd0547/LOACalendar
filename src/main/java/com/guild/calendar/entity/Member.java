@@ -1,10 +1,9 @@
 package com.guild.calendar.entity;
 
-import com.guild.calendar.dto.SigninDTO;
+import com.guild.calendar.dto.SigninDto;
 import jakarta.persistence.*;
 
 import com.guild.calendar.entity.base.BaseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.guild.calendar.constant.Role;
 
@@ -53,7 +52,7 @@ public class Member extends BaseEntity {
 
 
 
-	public static Member signinMember(SigninDTO signinDTO) {
+	public static Member signinMember(SigninDto signinDTO) {
 		Member member = new Member();
 
 		member.setEmail(signinDTO.getEmail());

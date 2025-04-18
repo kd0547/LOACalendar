@@ -26,49 +26,46 @@ ext {
     set('snippetsDir', file("build/generated-snippets"))
 }
 dependencies {
-	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
-	implementation 'com.fasterxml.jackson.core:jackson-databind'
-//
-    //JPA & database
+    //기본 Jackson 설정
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+    //Spring Web 및 Validation
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-hateoas'
+
+    //Spring Security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    testImplementation 'org.springframework.security:spring-security-test'
+
+    //JPA & Database
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
     implementation 'org.springframework:spring-jdbc'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     runtimeOnly 'com.mysql:mysql-connector-j'
 
+    //Redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
-
-    // Redis
-	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    // JWT
-    // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api
+    //WT
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-    // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-impl
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
-    // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-jackson
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+    runtimeOnly    'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly    'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
-    // Development only dependencies
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-
-
-    //lomnok
-    compileOnly 'org.projectlombok:lombok'
+    //Lombok
+    compileOnly     'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    //spring-security
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    testImplementation 'org.springframework.security:spring-security-test'
+    //개발 편의성 (DevTools)
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
-    //spring boot
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+    //API 문서 (Swagger / OpenAPI)
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+
+    //테스트
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
-
-    implementation 'org.springframework.boot:spring-boot-starter-hateoas'
-
-    //Test dependencies
-	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
-}
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'}
 
 
 tasks.named('test') {

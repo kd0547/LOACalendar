@@ -1,6 +1,6 @@
 package com.guild.calendar.repository;
 
-import com.guild.calendar.entity.Member;
+import com.guild.calendar.entity.Users;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -14,10 +14,10 @@ public class MemberRepository {
 
     /**
      * 유저 저장
-     * @param member
+     * @param users
      */
-    public void save(Member member) {
-        em.persist(member);
+    public void save(Users users) {
+        em.persist(users);
     }
 
 
@@ -26,8 +26,8 @@ public class MemberRepository {
      * @param email
      * @return
      */
-    public Member findEmail(String email) {
-        return em.createQuery("select m from Member m where m.email = :email",Member.class)
+    public Users findEmail(String email) {
+        return em.createQuery("select m from Users m where m.email = :email", Users.class)
                 .setParameter("email",email)
                 .getSingleResult();
     }

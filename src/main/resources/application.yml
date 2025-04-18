@@ -1,23 +1,32 @@
+
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+
 spring:
   datasource:
-    dbcp2:
-      driver-class-name: com.mysql.cj.jdbc.Driver
-
-    username: JPA
-    password:
-    url:
+    url: jdbc:mysql://localhost:3306/study_db?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: study
+    password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     show-sql: true
     defer-datasource-initialization: false
-
+    hibernate:
+      ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQL5Dialect
+        dialect: org.hibernate.dialect.MySQL8Dialect
         jdbc:
           batch_size: 20
         generate_statistics: true
         order_inserts: true
+
   data:
     redis:
       host: localhost
@@ -26,5 +35,5 @@ spring:
 jwt:
   token:
     key: h4PJIk1VKIn9PTBrw5dn8e7XCCA2CwPBZvw8MI0ZKJbi8i9ezQMtBKC25yCzZYyAy3gfr75GcIWpDkKWPbcvoM6mz3U5HA95B0h7HTGffPPKB7SQGmywL4hgB9seDteKmrKi140uxe413u48Nyho5BEsP12gMKTY6XxeKy7marvK0dgCeSJsZJBFvI1L84WdhZL0
-
-
+server:
+  port: 8081

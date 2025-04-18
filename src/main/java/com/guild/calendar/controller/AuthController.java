@@ -1,12 +1,18 @@
 package com.guild.calendar.controller;
 
+import com.guild.calendar.dto.MemberDto;
 import com.guild.calendar.dto.SigninDto;
 import com.guild.calendar.service.AuthService;
-import com.guild.calendar.util.JwtUtil;
+import com.guild.calendar.jwt.JwtTokenProvider;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,26 +27,27 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
-    private final JwtUtil jwtUtil;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final AuthenticationManager authenticationManager;
 
-    /**
-     *
-     * @param signinDTO
-     */
+
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody SigninDto signinDTO) {
-        Long memberId = authService.login(signinDTO);
-        String token = jwtUtil.generateToken(memberId);
+        Authentication authentication= authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(signinDTO.getEmail(),signinDTO.getPassword())
+        );
 
+        String token = jwtTokenProvider.generateToken(authentication);
         return ResponseEntity.ok(token);
     }
 
-    /**
-     * 회원가입
-     * @param signinDTO
-     * @return
-     */
     @PostMapping("/sign-in")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Registration successful"),
+            @ApiResponse(responseCode = "403", description = "Email already exists"),
+            @ApiResponse(responseCode = "400", description = "Invalid request format"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     public ResponseEntity<Object> createMember(@RequestBody SigninDto signinDTO) {
         Long id = authService.join(signinDTO);
 

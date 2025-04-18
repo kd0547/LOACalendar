@@ -2,7 +2,6 @@ package com.guild.calendar.entity;
 
 import jakarta.persistence.*;
 
-import com.guild.calendar.entity.base.BaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -12,9 +11,8 @@ import java.util.List;
 
 @Entity
 @Getter @Setter @ToString
-public class Calendar extends BaseEntity {
+public class Calendar {
 
-	@Column(name = "calendar_id")
 	@Id @GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
@@ -24,8 +22,8 @@ public class Calendar extends BaseEntity {
 	private String description;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "member_id")
-	private Member member; //소유자 정보
+	@JoinColumn(name = "users_id")
+	private Users users;
 
 	@OneToMany(mappedBy = "calendar",fetch = FetchType.LAZY)
 	private List<RaidPlan> raidPlans = new ArrayList<>();

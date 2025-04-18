@@ -3,8 +3,6 @@ package com.guild.calendar.entity;
 import com.guild.calendar.dto.SigninDto;
 import jakarta.persistence.*;
 
-import com.guild.calendar.entity.base.BaseEntity;
-
 import com.guild.calendar.constant.Role;
 
 import lombok.Getter;
@@ -16,11 +14,10 @@ import java.util.List;
 
 @Entity
 @Getter @Setter @ToString
-public class Member extends BaseEntity {
+public class Users {
 	
 	@Id
-	@GeneratedValue (strategy = GenerationType.AUTO, generator = "member_SEQ_GENERATOR")
-	@Column(name = "member_id")
+	@GeneratedValue (strategy = GenerationType.AUTO)
 	private Long id;
 	
 	@Column(unique = true)
@@ -36,10 +33,10 @@ public class Member extends BaseEntity {
 	@Enumerated(EnumType.STRING)
 	private Role role = Role.USER;
 
-	@OneToMany(mappedBy = "member")
+	@OneToMany(mappedBy = "users",fetch = FetchType.LAZY)
 	private List<Calendar> calendars = new ArrayList<>();
 
-	@OneToMany(mappedBy = "member")
+	@OneToMany(mappedBy = "users",fetch = FetchType.LAZY)
 	private List<Guild> guilds = new ArrayList<>();
 
 	@Column(nullable = false)
@@ -52,14 +49,14 @@ public class Member extends BaseEntity {
 
 
 
-	public static Member signinMember(SigninDto signinDTO) {
-		Member member = new Member();
+	public static Users signinMember(SigninDto signinDTO) {
+		Users users = new Users();
 
-		member.setEmail(signinDTO.getEmail());
-		member.setUsername(signinDTO.getUsername());
-		member.setPassword(signinDTO.getPassword());
+		users.setEmail(signinDTO.getEmail());
+		users.setUsername(signinDTO.getUsername());
+		users.setPassword(signinDTO.getPassword());
 
-		return member;
+		return users;
 	}
 
 }

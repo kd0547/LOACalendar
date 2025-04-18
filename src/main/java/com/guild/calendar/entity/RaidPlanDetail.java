@@ -10,17 +10,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
-import com.guild.calendar.entity.base.BaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
 @Entity
 @Getter @Setter @ToString
-public class RaidPlanDetail extends BaseEntity {
+public class RaidPlanDetail {
 
 	@Id @GeneratedValue(strategy = GenerationType.AUTO, generator = "calendar_detail_GENERATOR")
-	@Column(name = "calendar_detail_id")
 	private Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)

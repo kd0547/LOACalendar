@@ -12,16 +12,14 @@ import jakarta.persistence.*;
 
 import com.guild.calendar.constant.LegionRaid;
 
-import com.guild.calendar.entity.base.BaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
 @Entity
 @ToString @Getter @Setter
-public class RaidPlan extends BaseEntity {
+public class RaidPlan {
 	@Id @GeneratedValue(strategy = GenerationType.AUTO)
-	@Column(name = "raid_plan_id")
 	private Long id;
 
 	private String subject; //제목

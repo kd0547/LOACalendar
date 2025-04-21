@@ -1,5 +1,6 @@
 package com.guild.calendar.entity;
 
+import com.guild.calendar.dto.CalendarsDto;
 import jakarta.persistence.*;
 
 import lombok.Getter;
@@ -27,5 +28,14 @@ public class Calendar {
 
 	@OneToMany(mappedBy = "calendar",fetch = FetchType.LAZY)
 	private List<RaidPlan> raidPlans = new ArrayList<>();
+
+	public static Calendar createCalendar(Long userId, CalendarsDto calendarsDto) {
+		Calendar calendar = new Calendar();
+		calendar.setSubject(calendarsDto.getSubject());
+		calendar.setDescription(calendarsDto.getDescription());
+		calendar.setUsers(new Users(userId));
+
+		return calendar;
+	}
 }
 

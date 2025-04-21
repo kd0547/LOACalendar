@@ -27,7 +27,7 @@ public class Users {
 	private String username;
 
 	@Column(nullable = false)
-	private String password;	//
+	private String password;
 	
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
@@ -47,6 +47,14 @@ public class Users {
 	@Column(nullable = false)
 	private Boolean isEmailVerified = false; //이메일 인증 상태
 
+
+	@OneToMany(mappedBy = "users",fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+	private List<DiscodeInfo> discodeInfos;
+
+	public Users() {}
+	public Users(Long userId) {
+		this.id = userId;
+	}
 
 
 	public static Users signinMember(SigninDto signinDTO) {

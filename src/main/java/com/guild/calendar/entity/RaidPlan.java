@@ -33,6 +33,9 @@ public class RaidPlan {
 	@OneToMany(mappedBy = "raidPlan", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private List<RaidPlanDetail> raidPlanDetails = new ArrayList<>();
 
+	@ManyToOne
+	private Users users;
+
 	@Enumerated(EnumType.STRING)
 	private LegionRaid legionRaid;
 	
